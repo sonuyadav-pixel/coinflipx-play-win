@@ -121,7 +121,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             {isSignUp ? 'Join CoinFlipX' : 'Welcome Back'}
           </h2>
           <p className="text-muted-foreground">
-            {isSignUp ? 'Create your account to start playing!' : 'Sign in to continue your game!'}
+            {isSignUp ? 'Create your account to start playing and winning!' : 'Sign in to continue your gaming journey!'}
           </p>
         </div>
 
@@ -188,7 +188,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             className="w-full" 
             disabled={loading}
           >
-            {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Start Playing')}
+            {loading ? 'Processing...' : (isSignUp ? 'Create Account & Start Playing' : 'Sign In & Continue')}
           </Button>
         </form>
 
@@ -210,7 +210,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             disabled={loading}
           >
             <Chrome size={18} />
-            Continue with Google
+            {isSignUp ? 'Sign Up with Google' : 'Continue with Google'}
           </Button>
           <Button variant="glass" size="lg" className="w-full justify-start opacity-50" disabled>
             <Facebook size={18} />
@@ -224,6 +224,10 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
 
         {/* Footer */}
         <p className="text-xs text-muted-foreground text-center mt-6">
+          {isSignUp 
+            ? "Already have an account? Click 'Sign In' above" 
+            : "New to CoinFlipX? Click 'Sign Up' to create an account"}
+          <br />
           18+ Only | Play Responsibly
         </p>
       </div>
