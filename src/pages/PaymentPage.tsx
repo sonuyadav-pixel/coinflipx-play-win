@@ -185,40 +185,40 @@ const PaymentPage = () => {
           </Button>
         </div>
 
-        {/* Main Content - Centered */}
-        <div className="flex-1 flex flex-col items-center justify-center max-w-4xl mx-auto w-full">
+        {/* Main Content - Moved up */}
+        <div className="flex-1 flex flex-col items-center justify-start pt-4 max-w-4xl mx-auto w-full">
           
           {/* Brand Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-6xl font-bold text-white mb-2">
+          <div className="text-center mb-4">
+            <h1 className="text-5xl font-bold text-white mb-1">
               COINFLIP<span className="text-primary">X</span>
             </h1>
-            <p className="text-primary text-xl font-semibold tracking-wider">PLAY & WIN BIG</p>
+            <p className="text-primary text-lg font-semibold tracking-wider">PLAY & WIN BIG</p>
           </div>
 
           {/* Title Section */}
-          <div className="text-center mb-8">
-            <h2 className="text-5xl font-bold text-white mb-4">Buy Coins</h2>
-            <p className="text-primary text-2xl font-bold">1 INR = 100 Coins</p>
+          <div className="text-center mb-6">
+            <h2 className="text-4xl font-bold text-white mb-2">Buy Coins</h2>
+            <p className="text-primary text-xl font-bold">1 INR = 100 Coins</p>
           </div>
 
-          {/* Coin Packages Grid */}
-          <div className="grid grid-cols-3 gap-6 mb-8 w-full max-w-3xl">
+          {/* Coin Packages Grid - Smaller tiles */}
+          <div className="grid grid-cols-3 gap-4 mb-6 w-full max-w-2xl">
             {presetOptions.map((opt) => (
               <Card
                 key={opt}
-                className={`relative cursor-pointer transition-all duration-300 hover:scale-105 p-6 ${
+                className={`relative cursor-pointer transition-all duration-300 hover:scale-105 p-4 ${
                   coins === opt 
                     ? 'bg-card/30 border-2 border-secondary shadow-glow-blue' 
                     : 'bg-card/20 border-2 border-primary/30 hover:border-primary/50'
                 } backdrop-blur-sm`}
                 onClick={() => setCoins(opt)}
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-gold-gradient rounded-full flex items-center justify-center shadow-glow-gold">
-                    <Coins className="w-8 h-8 text-primary-foreground" />
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gold-gradient rounded-full flex items-center justify-center shadow-glow-gold">
+                    <Coins className="w-6 h-6 text-primary-foreground" />
                   </div>
-                  <div className="text-3xl font-bold text-white">
+                  <div className="text-2xl font-bold text-white">
                     {opt.toLocaleString()}
                   </div>
                 </div>
@@ -226,34 +226,34 @@ const PaymentPage = () => {
             ))}
           </div>
 
-          {/* Custom Input */}
-          <div className="w-full max-w-2xl mb-8">
+          {/* Custom Input - Larger size */}
+          <div className="w-full max-w-2xl mb-6">
             <Input
               type="number"
               min="100"
               value={coins}
               onChange={(e) => handleCustomInput(e.target.value)}
-              className="w-full text-center text-xl py-6 bg-card/20 border-2 border-primary/30 focus:border-primary text-white placeholder:text-muted-foreground backdrop-blur-sm rounded-2xl"
+              className="w-full text-center text-2xl py-8 bg-card/20 border-2 border-primary/30 focus:border-primary text-white placeholder:text-muted-foreground backdrop-blur-sm rounded-2xl"
               placeholder="Enter coin amount"
             />
           </div>
 
           {/* Payment Display */}
-          <div className="text-center mb-8">
-            <p className="text-white text-3xl font-semibold mb-4">
+          <div className="text-center mb-6">
+            <p className="text-white text-2xl font-semibold">
               You will pay: <span className="text-primary">₹{priceINR}</span>
             </p>
           </div>
 
-          {/* CTA Button */}
+          {/* CTA Button - Ensured visibility */}
           <Button
             onClick={handlePayment}
             disabled={!coins || coins < 100 || processing}
-            className="bg-gold-gradient hover:shadow-glow-gold text-primary-foreground font-bold py-6 px-16 text-2xl rounded-2xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mb-8"
+            className="bg-gold-gradient hover:shadow-glow-gold text-primary-foreground font-bold py-4 px-12 text-xl rounded-2xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mb-4"
           >
             {processing ? (
               <div className="flex items-center gap-3">
-                <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
                 <span>Processing...</span>
               </div>
             ) : (
@@ -262,9 +262,9 @@ const PaymentPage = () => {
           </Button>
 
           {/* Footer */}
-          <div className="text-center space-y-2">
-            <p className="text-muted-foreground text-lg">Coins added instantly</p>
-            <p className="text-muted-foreground">Refund policy</p>
+          <div className="text-center space-y-1">
+            <p className="text-muted-foreground text-sm">Coins added instantly</p>
+            <p className="text-muted-foreground text-sm">Refund policy</p>
           </div>
         </div>
       </div>
