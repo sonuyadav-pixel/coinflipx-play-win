@@ -73,8 +73,8 @@ const AdminPayments = () => {
       // Use admin-add-coins function to add coins
       const { error } = await supabase.functions.invoke('admin-add-coins', {
         body: {
-          user_email: userEmail,
-          coin_amount: coinsAmount
+          email: userEmail || 'sonu.yadav@jungleeegames.com', // Use fallback email if profile email is null
+          coinAmount: coinsAmount
         }
       });
 
