@@ -126,6 +126,13 @@ export default function BettingPopup({
               <p className="text-gray-300 text-sm">Betting Amount:</p>
               <p className="text-2xl font-bold text-white">${selectedAmount}</p>
               <p className="text-sm text-gray-400">on {betSide}</p>
+              
+              {/* Potential Winnings */}
+              <div className="mt-3 pt-3 border-t border-gray-700">
+                <p className="text-green-400 text-sm font-semibold">Potential Winnings:</p>
+                <p className="text-xl font-bold text-green-400">${(selectedAmount * 2).toFixed(2)}</p>
+                <p className="text-xs text-gray-500">Win 2X your bet amount!</p>
+              </div>
             </div>
           </div>
         )}
