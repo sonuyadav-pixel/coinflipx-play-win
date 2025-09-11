@@ -15,35 +15,109 @@ interface LoginModalProps {
 }
 
 const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
-  const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<'email' | 'code'>('email');
+  const [codeSent, setCodeSent] = useState(false);
   
-  const { signUp, signIn, signInWithGoogle } = useAuth();
+  const { sendVerificationCode, verifyCode, signInWithGoogle } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
+    if (step === 'email') {
+      if (!email) {
+        toast({
+          title: "Error",
+          description: "Please enter your email address",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setLoading(true);
+      
+      try {
+        const { data, error } = await sendVerificationCode(email);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Code Sent!",
+            description: "Check your email for the verification code",
+          });
+          setStep('code');
+          setCodeSent(true);
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to send verification code",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      if (!verificationCode) {
+        toast({
+          title: "Error",
+          description: "Please enter the verification code",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setLoading(true);
+      
+      try {
+        const { data, error } = await verifyCode(email, verificationCode);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Success!",
+            description: "Email verified successfully! Welcome!",
+          });
+          onClose();
+          navigate('/game');
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to verify code",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     }
+  };
 
+  const handleBackToEmail = () => {
+    setStep('email');
+    setVerificationCode('');
+    setCodeSent(false);
+  };
+
+  const handleResendCode = async () => {
     setLoading(true);
-    
     try {
-      const { error } = isSignUp 
-        ? await signUp(email, password)
-        : await signIn(email, password);
-
+      const { data, error } = await sendVerificationCode(email);
       if (error) {
         toast({
           title: "Error",
@@ -52,16 +126,14 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         });
       } else {
         toast({
-          title: "Success!",
-          description: isSignUp ? "Account created successfully!" : "Welcome back!",
+          title: "Code Resent!",
+          description: "Check your email for the new verification code",
         });
-        onClose();
-        navigate('/game');
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "Failed to resend verification code",
         variant: "destructive",
       });
     } finally {
@@ -118,68 +190,50 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         <div className="text-center mb-8">
           <CoinFlip size="md" className="mx-auto mb-4" />
           <h2 className="text-2xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-2">
-            {isSignUp ? 'Join CoinFlipX' : 'Welcome Back'}
+            {step === 'email' ? 'Join CoinFlipX' : 'Verify Your Email'}
           </h2>
           <p className="text-muted-foreground">
-            {isSignUp ? 'Create your account to start playing and winning!' : 'Sign in to continue your gaming journey!'}
+            {step === 'email' 
+              ? 'Enter your email to get started with secure, passwordless login!'
+              : `We sent a 6-digit code to ${email}`
+            }
           </p>
         </div>
 
-        {/* Sign Up/Sign In Toggle */}
-        <div className="flex bg-muted/50 p-1 rounded-lg mb-6">
-          <button
-            onClick={() => setIsSignUp(false)}
-            className={`flex-1 py-2 px-4 rounded-md transition-all text-sm font-medium ${
-              !isSignUp
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => setIsSignUp(true)}
-            className={`flex-1 py-2 px-4 rounded-md transition-all text-sm font-medium ${
-              isSignUp
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
-
-        {/* Login Form */}
+        {/* Email/Code Form */}
         <form onSubmit={handleSubmit} className="space-y-4 mb-6">
-          <div>
-            <Label htmlFor="email" className="text-sm font-medium">
-              Email Address
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
-              disabled={loading}
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="password" className="text-sm font-medium">
-              Password
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
-              disabled={loading}
-            />
-          </div>
+          {step === 'email' ? (
+            <div>
+              <Label htmlFor="email" className="text-sm font-medium">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
+                disabled={loading}
+              />
+            </div>
+          ) : (
+            <div>
+              <Label htmlFor="code" className="text-sm font-medium">
+                Verification Code
+              </Label>
+              <Input
+                id="code"
+                type="text"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                placeholder="Enter 6-digit code"
+                className="mt-1 bg-input/50 border-border/50 focus:border-primary/50 text-center text-lg tracking-widest"
+                disabled={loading}
+                maxLength={6}
+              />
+            </div>
+          )}
           
           <Button 
             type="submit" 
@@ -188,8 +242,33 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             className="w-full" 
             disabled={loading}
           >
-            {loading ? 'Processing...' : (isSignUp ? 'Create Account & Start Playing' : 'Sign In & Continue')}
+            {loading ? 'Processing...' : (step === 'email' ? 'Send Verification Code' : 'Verify & Sign In')}
           </Button>
+
+          {step === 'code' && (
+            <div className="space-y-2">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm" 
+                className="w-full" 
+                onClick={handleBackToEmail}
+                disabled={loading}
+              >
+                ← Back to Email
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                className="w-full" 
+                onClick={handleResendCode}
+                disabled={loading}
+              >
+                Resend Code
+              </Button>
+            </div>
+          )}
         </form>
 
         {/* Divider */}
@@ -234,9 +313,9 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
 
         {/* Footer */}
         <p className="text-xs text-muted-foreground text-center mt-6">
-          {isSignUp 
-            ? "Already have an account? Click 'Sign In' above" 
-            : "New to CoinFlipX? Click 'Sign Up' to create an account"}
+          {step === 'email' 
+            ? "Secure, passwordless authentication powered by email verification" 
+            : "Didn't receive the code? Check your spam folder or click resend"}
           <br />
           18+ Only | Play Responsibly
         </p>

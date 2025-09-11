@@ -27,6 +27,44 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const sendVerificationCode = async (email: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-verification-code', {
+        body: { email }
+      });
+      
+      if (error) throw error;
+      return { data, error: null };
+    } catch (error: any) {
+      return { data: null, error: { message: error.message } };
+    }
+  };
+
+  const verifyCode = async (email: string, code: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-code', {
+        body: { email, code }
+      });
+      
+      if (error) throw error;
+      
+      // If verification successful, sign in with magic link
+      if (data.success && data.session) {
+        const { data: authData, error: authError } = await supabase.auth.verifyOtp({
+          email,
+          token: data.session.properties.access_token,
+          type: 'email'
+        });
+        
+        return { data: authData, error: authError };
+      }
+      
+      return { data, error: null };
+    } catch (error: any) {
+      return { data: null, error: { message: error.message } };
+    }
+  };
+
   const signUp = async (email: string, password: string) => {
     const redirectUrl = `${window.location.origin}/game`;
     
@@ -70,6 +108,8 @@ export const useAuth = () => {
     user,
     session,
     loading,
+    sendVerificationCode,
+    verifyCode,
     signUp,
     signIn,
     signInWithGoogle,
