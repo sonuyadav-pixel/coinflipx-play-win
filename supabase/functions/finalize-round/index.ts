@@ -13,8 +13,6 @@ serve(async (req) => {
   }
 
   try {
-    console.log('finalize-round function called with:', { roundId, result });
-    
     // Use service role key for admin operations
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -22,6 +20,8 @@ serve(async (req) => {
     );
 
     const { roundId, result } = await req.json();
+    
+    console.log('finalize-round function called with:', { roundId, result });
 
     if (!roundId || !result || !['Heads', 'Tails'].includes(result)) {
       console.error('Invalid parameters:', { roundId, result });
