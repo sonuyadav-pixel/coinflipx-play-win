@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import BettingPopup from "@/components/BettingPopup";
+import Confetti from "react-confetti";
 
 const CoinGame = () => {
   const navigate = useNavigate();
@@ -22,12 +23,15 @@ const CoinGame = () => {
   const [tailsPercent, setTailsPercent] = useState(50);
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [recentResults, setRecentResults] = useState<string[]>([]);
-  const [popupTimer, setPopupTimer] = useState(10);
+  const [popupTimer, setPopupTimer] = useState(30);
   const [currentRoundId, setCurrentRoundId] = useState<string | null>(null);
   const [userBet, setUserBet] = useState<any>(null);
   const [showBettingPopup, setShowBettingPopup] = useState(false);
   const [selectedBetSide, setSelectedBetSide] = useState<'Heads' | 'Tails'>('Heads');
   const [isPlacingBet, setIsPlacingBet] = useState(false);
+  const [userWon, setUserWon] = useState<boolean | null>(null);
+  const [winAmount, setWinAmount] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Create new round when component mounts
   useEffect(() => {
@@ -243,8 +247,25 @@ const CoinGame = () => {
         const coin = Math.random() < 0.5 ? "Heads" : "Tails";
         setResult(coin);
         setFlipping(false);
+        
+        // Check if user won
+        if (userBet) {
+          const won = userBet.bet_side === coin;
+          setUserWon(won);
+          if (won) {
+            setWinAmount(parseFloat(userBet.bet_amount) * 2);
+            setShowConfetti(true);
+            setTimeout(() => setShowConfetti(false), 5000);
+          } else {
+            setWinAmount(0);
+          }
+        } else {
+          setUserWon(null);
+          setWinAmount(0);
+        }
+        
         setShowPopup(true);
-        setPopupTimer(10);
+        setPopupTimer(30);
         finalizeCoinFlip(coin);
       }, 7000); // Video duration
     } else {
@@ -266,8 +287,15 @@ const CoinGame = () => {
   const handleClosePopup = () => {
     setShowPopup(false);
     setResult(null);
-    setPopupTimer(10);
+    setPopupTimer(30);
+    setUserWon(null);
+    setWinAmount(0);
+    setShowConfetti(false);
     createNewRound(); // Start new round
+  };
+
+  const handleBackToLobby = () => {
+    navigate("/game");
   };
 
   const progress = (timeLeft / maxTime) * 100;
@@ -475,32 +503,6 @@ const CoinGame = () => {
                 </div>
               </div>
             )}
-
-            {/* Show bet result in popup */}
-            {showPopup && result && userBet && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-                <motion.div className="glass-card p-12 rounded-3xl shadow-2xl text-center max-w-md mx-4 relative">
-                  <button onClick={handleClosePopup} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-muted/20 hover:bg-muted/40 flex items-center justify-center">✕</button>
-                  <h2 className="text-3xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-6">It's {result}!</h2>
-                  <CoinFlip size="lg" className="coin-glow mx-auto mb-6" />
-                  
-                  {/* Show if user won */}
-                  <div className="mt-4 p-4 rounded-lg bg-black/20">
-                    <p className={`font-bold text-lg ${userBet.bet_side === result ? 'text-green-400' : 'text-red-400'}`}>
-                      {userBet.bet_side === result ? '🎉 You Won!' : '😞 You Lost'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">Your bet: ${userBet.bet_amount} on {userBet.bet_side}</p>
-                  </div>
-                  
-                  <div className="flex items-center justify-center gap-2 text-muted-foreground mt-4">
-                    <div className="w-6 h-6 rounded-full border-2 border-primary relative">
-                      <span className="absolute inset-0 flex items-center justify-center text-xs font-mono">{popupTimer}</span>
-                    </div>
-                    <span className="text-sm">Auto-close</span>
-                  </div>
-                </motion.div>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -514,16 +516,27 @@ const CoinGame = () => {
         isPlacing={isPlacingBet}
       />
 
+      {/* Confetti */}
+      {showConfetti && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle={false}
+          numberOfPieces={200}
+          gravity={0.1}
+        />
+      )}
+
       {/* Result Popup */}
       <AnimatePresence>
         {showPopup && result && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+          <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-50">
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ duration: 0.5, type: "spring" }}
-              className="glass-card p-12 rounded-3xl shadow-2xl text-center max-w-md mx-4 relative"
+              className="glass-card p-8 rounded-3xl shadow-2xl text-center max-w-lg mx-4 relative w-full"
             >
               {/* Close Button */}
               <button
@@ -533,9 +546,12 @@ const CoinGame = () => {
                 ✕
               </button>
 
-              <h2 className="text-3xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-6">
-                Result!
+              {/* Result Header */}
+              <h2 className="text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-6">
+                Game Result
               </h2>
+
+              {/* Coin Animation */}
               <motion.div
                 className="flex justify-center mb-6"
                 initial={{ rotateY: 0 }}
@@ -544,24 +560,91 @@ const CoinGame = () => {
               >
                 <CoinFlip size="lg" className="coin-glow" />
               </motion.div>
-              <p className="text-2xl font-bold text-foreground mb-4">
+
+              {/* Coin Result */}
+              <p className="text-3xl font-bold text-foreground mb-6">
                 It's {result}!
               </p>
-              
-              {/* Timer */}
+
+              {/* Win/Loss Status */}
+              {userBet && userWon !== null && (
+                <div className="mb-8">
+                  {userWon ? (
+                    <div className="text-center">
+                      <div className="text-6xl mb-4">🎉</div>
+                      <h3 className="text-2xl font-bold text-green-400 mb-2">
+                        Congratulations!
+                      </h3>
+                      <p className="text-xl text-green-300 mb-2">
+                        You won ${winAmount.toFixed(2)}!
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Your bet: ${userBet.bet_amount} on {userBet.bet_side}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="text-6xl mb-4">😢</div>
+                      <h3 className="text-2xl font-bold text-red-400 mb-2">
+                        Better luck next time!
+                      </h3>
+                      <p className="text-lg text-gray-300 mb-2">
+                        You lost ${userBet.bet_amount}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Your bet: ${userBet.bet_amount} on {userBet.bet_side}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* No bet placed */}
+              {!userBet && (
+                <div className="mb-8 text-center">
+                  <div className="text-4xl mb-4">🎲</div>
+                  <p className="text-xl text-gray-300">
+                    You didn't place a bet this round
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-4 mb-6">
+                <Button
+                  onClick={handleClosePopup}
+                  variant="hero"
+                  size="lg"
+                  className="w-full text-lg font-semibold"
+                >
+                  Restart Game in {popupTimer}s
+                </Button>
+                
+                <Button
+                  onClick={handleBackToLobby}
+                  variant="glass"
+                  size="lg"
+                  className="w-full text-lg"
+                >
+                  Back to Lobby
+                </Button>
+              </div>
+
+              {/* Timer visualization */}
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <div className="w-6 h-6 rounded-full border-2 border-primary relative">
+                <div className="w-8 h-8 rounded-full border-2 border-primary relative">
                   <motion.div
-                    className="absolute inset-0 rounded-full border-2 border-primary"
+                    className="absolute inset-0 rounded-full"
                     style={{
-                      background: `conic-gradient(hsl(var(--primary)) ${(10 - popupTimer) * 36}deg, transparent 0deg)`
+                      background: `conic-gradient(hsl(var(--primary)) ${(30 - popupTimer) * 12}deg, transparent 0deg)`,
+                      borderRadius: '50%'
                     }}
                   />
-                  <span className="absolute inset-0 flex items-center justify-center text-xs font-mono">
+                  <span className="absolute inset-0 flex items-center justify-center text-xs font-mono text-white">
                     {popupTimer}
                   </span>
                 </div>
-                <span className="text-sm">Auto-close</span>
+                <span className="text-sm">Next game starts automatically</span>
               </div>
             </motion.div>
           </div>
