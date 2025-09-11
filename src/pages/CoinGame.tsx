@@ -4,19 +4,190 @@ import { CircleDollarSign, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import CoinFlip from "@/components/CoinFlip";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
+import BettingPopup from "@/components/BettingPopup";
 
 const CoinGame = () => {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState("bet"); // Only "bet" phase now
+  const { user } = useAuth();
+  const [phase, setPhase] = useState("bet");
   const [timeLeft, setTimeLeft] = useState(60);
   const [result, setResult] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [flipping, setFlipping] = useState(false);
   const [maxTime, setMaxTime] = useState(60);
-  const [headsPercent, setHeadsPercent] = useState(60);
-  const [tailsPercent, setTailsPercent] = useState(40);
-  const [totalPlayers, setTotalPlayers] = useState(1234);
+  const [headsPercent, setHeadsPercent] = useState(50);
+  const [tailsPercent, setTailsPercent] = useState(50);
+  const [totalPlayers, setTotalPlayers] = useState(0);
   const [popupTimer, setPopupTimer] = useState(10);
+  const [currentRoundId, setCurrentRoundId] = useState<string | null>(null);
+  const [userBet, setUserBet] = useState<any>(null);
+  const [showBettingPopup, setShowBettingPopup] = useState(false);
+  const [selectedBetSide, setSelectedBetSide] = useState<'Heads' | 'Tails'>('Heads');
+  const [isPlacingBet, setIsPlacingBet] = useState(false);
+
+  // Create new round when component mounts
+  useEffect(() => {
+    createNewRound();
+  }, []);
+
+  // Update round stats periodically
+  useEffect(() => {
+    if (currentRoundId && phase === "bet") {
+      const interval = setInterval(() => {
+        fetchRoundStats();
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [currentRoundId, phase]);
+
+  const createNewRound = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('create-round', {
+        body: { bettingDurationSeconds: 60 }
+      });
+
+      if (error) throw error;
+
+      setCurrentRoundId(data.round.id);
+      setTimeLeft(60);
+      setMaxTime(60);
+      setPhase("bet");
+      setUserBet(null);
+    } catch (error) {
+      console.error('Error creating round:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create new round",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchRoundStats = async () => {
+    if (!currentRoundId) return;
+
+    try {
+      const response = await fetch(`https://bozlxskkhdpbgwardifc.supabase.co/functions/v1/get-round-stats?roundId=${currentRoundId}`, {
+        method: 'GET',
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      
+      const data = await response.json();
+      setTotalPlayers(data.totalPlayers);
+      setHeadsPercent(data.headsPercent);
+      setTailsPercent(data.tailsPercent);
+    } catch (error) {
+      console.error('Error fetching round stats:', error);
+    }
+  };
+
+  const handleBetClick = (betSide: 'Heads' | 'Tails') => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to place bets",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (timeLeft <= 0) {
+      toast({
+        title: "Betting Closed",
+        description: "Betting period has ended",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (userBet) {
+      toast({
+        title: "Already Bet",
+        description: "You have already placed a bet for this round",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSelectedBetSide(betSide);
+    setShowBettingPopup(true);
+  };
+
+  const handlePlaceBet = async (amount: number) => {
+    if (!user || !currentRoundId) return;
+
+    setIsPlacingBet(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session found');
+
+      const response = await fetch('https://bozlxskkhdpbgwardifc.supabase.co/functions/v1/place-bet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          roundId: currentRoundId,
+          betSide: selectedBetSide,
+          betAmount: amount
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to place bet');
+      }
+
+      const data = await response.json();
+      setUserBet(data.bet);
+      setShowBettingPopup(false);
+      toast({
+        title: "Bet Placed!",
+        description: `$${amount} on ${selectedBetSide}`,
+      });
+      
+      // Fetch updated stats
+      fetchRoundStats();
+    } catch (error: any) {
+      console.error('Error placing bet:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to place bet",
+        variant: "destructive"
+      });
+    } finally {
+      setIsPlacingBet(false);
+    }
+  };
+
+  const finalizeCoinFlip = async (coinResult: string) => {
+    if (!currentRoundId) return;
+
+    try {
+      const response = await fetch('https://bozlxskkhdpbgwardifc.supabase.co/functions/v1/finalize-round', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          roundId: currentRoundId,
+          result: coinResult
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to finalize round');
+      
+      const data = await response.json();
+      console.log('Round finalized:', data);
+    } catch (error) {
+      console.error('Error finalizing round:', error);
+    }
+  };
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -28,6 +199,7 @@ const CoinGame = () => {
         setFlipping(false);
         setShowPopup(true);
         setPopupTimer(10);
+        finalizeCoinFlip(coin);
       }, 3000); // Video duration
     } else {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
@@ -47,9 +219,9 @@ const CoinGame = () => {
 
   const handleClosePopup = () => {
     setShowPopup(false);
-    setTimeLeft(60);
     setResult(null);
     setPopupTimer(10);
+    createNewRound(); // Start new round
   };
 
   const progress = (timeLeft / maxTime) * 100;
@@ -153,6 +325,15 @@ const CoinGame = () => {
               )}
             </AnimatePresence>
 
+            {/* User Bet Status */}
+            {userBet && !showPopup && !flipping && (
+              <div className="mb-6 p-4 glass-card rounded-lg border border-green-500">
+                <p className="text-green-400 text-center font-semibold">
+                  ✅ Bet placed: ${userBet.bet_amount} on {userBet.bet_side}
+                </p>
+              </div>
+            )}
+
             {/* Betting Phase */}
             {!showPopup && !flipping && (
               <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto">
@@ -187,7 +368,13 @@ const CoinGame = () => {
                 <div className="flex gap-6">
                   <motion.div whileTap={{ scale: 0.95 }}>
                     <Button 
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black px-8 py-4 text-lg font-bold shadow-lg flex items-center gap-2"
+                      onClick={() => handleBetClick('Heads')}
+                      disabled={!!userBet || timeLeft <= 0}
+                      className={`px-8 py-4 text-lg font-bold shadow-lg flex items-center gap-2 ${
+                        userBet || timeLeft <= 0 
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                          : 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black'
+                      }`}
                     >
                       <CircleDollarSign className="w-5 h-5" />
                       Bet on Heads
@@ -196,7 +383,13 @@ const CoinGame = () => {
                   
                   <motion.div whileTap={{ scale: 0.95 }}>
                     <Button 
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-4 text-lg font-bold shadow-lg flex items-center gap-2"
+                      onClick={() => handleBetClick('Tails')}
+                      disabled={!!userBet || timeLeft <= 0}
+                      className={`px-8 py-4 text-lg font-bold shadow-lg flex items-center gap-2 ${
+                        userBet || timeLeft <= 0 
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                          : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                      }`}
                     >
                       <CircleDollarSign className="w-5 h-5" />
                       Bet on Tails
@@ -205,9 +398,44 @@ const CoinGame = () => {
                 </div>
               </div>
             )}
+
+            {/* Show bet result in popup */}
+            {showPopup && result && userBet && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
+                <motion.div className="glass-card p-12 rounded-3xl shadow-2xl text-center max-w-md mx-4 relative">
+                  <button onClick={handleClosePopup} className="absolute top-4 right-4 w-8 h-8 rounded-full bg-muted/20 hover:bg-muted/40 flex items-center justify-center">✕</button>
+                  <h2 className="text-3xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-6">It's {result}!</h2>
+                  <CoinFlip size="lg" className="coin-glow mx-auto mb-6" />
+                  
+                  {/* Show if user won */}
+                  <div className="mt-4 p-4 rounded-lg bg-black/20">
+                    <p className={`font-bold text-lg ${userBet.bet_side === result ? 'text-green-400' : 'text-red-400'}`}>
+                      {userBet.bet_side === result ? '🎉 You Won!' : '😞 You Lost'}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Your bet: ${userBet.bet_amount} on {userBet.bet_side}</p>
+                  </div>
+                  
+                  <div className="flex items-center justify-center gap-2 text-muted-foreground mt-4">
+                    <div className="w-6 h-6 rounded-full border-2 border-primary relative">
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-mono">{popupTimer}</span>
+                    </div>
+                    <span className="text-sm">Auto-close</span>
+                  </div>
+                </motion.div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Betting Popup */}
+      <BettingPopup
+        isOpen={showBettingPopup}
+        onClose={() => setShowBettingPopup(false)}
+        onPlaceBet={handlePlaceBet}
+        betSide={selectedBetSide}
+        isPlacing={isPlacingBet}
+      />
 
       {/* Result Popup */}
       <AnimatePresence>

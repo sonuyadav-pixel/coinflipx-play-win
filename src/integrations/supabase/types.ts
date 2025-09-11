@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      bets: {
+        Row: {
+          bet_amount: number
+          bet_side: string
+          created_at: string
+          id: string
+          is_winner: boolean | null
+          round_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bet_amount: number
+          bet_side: string
+          created_at?: string
+          id?: string
+          is_winner?: boolean | null
+          round_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bet_amount?: number
+          bet_side?: string
+          created_at?: string
+          id?: string
+          is_winner?: boolean | null
+          round_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_bets_round_id"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -38,6 +79,33 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      rounds: {
+        Row: {
+          betting_ends_at: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          result: string | null
+          started_at: string
+        }
+        Insert: {
+          betting_ends_at: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          result?: string | null
+          started_at?: string
+        }
+        Update: {
+          betting_ends_at?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          result?: string | null
+          started_at?: string
         }
         Relationships: []
       }
