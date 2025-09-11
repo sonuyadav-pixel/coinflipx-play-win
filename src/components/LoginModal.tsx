@@ -21,7 +21,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, signInWithGoogle } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -62,6 +62,31 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
       toast({
         title: "Error",
         description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    
+    try {
+      const { error } = await signInWithGoogle();
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+      // Note: OAuth will redirect automatically, so we don't need to handle success here
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign in with Google",
         variant: "destructive",
       });
     } finally {
@@ -177,15 +202,21 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
 
         {/* Social Login */}
         <div className="space-y-3">
-          <Button variant="glass" size="lg" className="w-full justify-start">
+          <Button 
+            variant="glass" 
+            size="lg" 
+            className="w-full justify-start" 
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+          >
             <Chrome size={18} />
             Continue with Google
           </Button>
-          <Button variant="glass" size="lg" className="w-full justify-start">
+          <Button variant="glass" size="lg" className="w-full justify-start opacity-50" disabled>
             <Facebook size={18} />
             Continue with Facebook
           </Button>
-          <Button variant="glass" size="lg" className="w-full justify-start">
+          <Button variant="glass" size="lg" className="w-full justify-start opacity-50" disabled>
             <Apple size={18} />
             Continue with Apple
           </Button>
