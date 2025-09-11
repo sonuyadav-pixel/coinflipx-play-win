@@ -205,7 +205,7 @@ const CoinGame = () => {
         setShowPopup(true);
         setPopupTimer(10);
         finalizeCoinFlip(coin);
-      }, 3000); // Video duration
+      }, 7000); // Video duration
     } else {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
@@ -308,37 +308,24 @@ const CoinGame = () => {
               </div>
             )}
 
-            {/* Coin Flip Video Animation during flipping phase */}
-            {timeLeft <= 0 && !showPopup && (
-              <div className="flex flex-col items-center mb-8">
-                <video
-                  autoPlay
-                  muted
-                  loop
-                  className="w-64 h-64 rounded-full object-cover"
-                >
-                  <source src="/coin-toss.mp4" type="video/mp4" />
-                </video>
-                <p className="mt-4 text-lg text-muted-foreground">Flipping coin...</p>
-              </div>
-            )}
 
             {/* Coin Flip Video Animation */}
             <AnimatePresence>
               {flipping && (
                 <motion.div
                   key="coin-flip-video"
-                  initial={{ scale: 0, opacity: 0 }}
+                  initial={{ scale: 1, opacity: 1 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  transition={{ duration: 0.5 }}
+                  transition={{ duration: 0.1 }}
                   className="flex flex-col items-center mb-8"
                 >
                   <video
                     autoPlay
                     muted
+                    playsInline
+                    preload="auto"
                     className="w-64 h-64 rounded-full object-cover"
-                    onEnded={() => {/* Video will end and result will show */}}
                   >
                     <source src="/coin-toss.mp4" type="video/mp4" />
                   </video>
