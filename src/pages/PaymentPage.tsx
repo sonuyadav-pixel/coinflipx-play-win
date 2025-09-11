@@ -173,155 +173,98 @@ const PaymentPage = () => {
       {/* Premium Background Effects */}
       <div className="absolute inset-0 sparkles opacity-20"></div>
       
-      <div className="relative z-10 p-4 max-w-5xl mx-auto flex-1 flex flex-col">
-        {/* Compact Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              onClick={() => navigate(-1)}
-              className="hover:bg-primary/10 hover:text-primary transition-all duration-300 p-2"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gold-gradient rounded-full flex items-center justify-center shadow-glow-gold">
-                <Crown className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-                  CoinFlipX
-                </h1>
-                <p className="text-primary/80 text-xs font-medium">Play & Win Big</p>
-              </div>
-            </div>
-          </div>
+      <div className="relative z-10 flex flex-col h-full p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="hover:bg-primary/10 hover:text-primary transition-all duration-300 p-2"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </Button>
         </div>
 
-        {/* Compact Title Section */}
-        <div className="text-center mb-6">
-          <h2 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-            Buy Coins
-          </h2>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold-gradient/20 rounded-full border border-primary/30 backdrop-blur-sm">
-            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-            <p className="text-sm font-bold text-primary">1 INR = 100 Coins</p>
-            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-          </div>
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content - Centered */}
+        <div className="flex-1 flex flex-col items-center justify-center max-w-4xl mx-auto w-full">
           
-          {/* Left: Preset Coin Buttons */}
-          <div className="lg:col-span-2">
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              {presetOptions.map((opt) => (
-                <Card
-                  key={opt}
-                  className={`relative cursor-pointer transition-all duration-300 hover:scale-105 ${
-                    coins === opt 
-                      ? 'glass-card border-primary shadow-glow-gold' 
-                      : 'glass-card border-primary/20 hover:border-primary/40'
-                  }`}
-                  onClick={() => setCoins(opt)}
-                >
-                  <div className="p-3 text-center">
-                    <div className={`w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center transition-all duration-300 ${
-                      coins === opt ? 'bg-gold-gradient shadow-glow-gold coin-glow' : 'bg-gold-gradient/70'
-                    }`}>
-                      <Coins className="w-5 h-5 text-primary-foreground" />
-                    </div>
-                    
-                    <div className="text-lg font-bold text-primary mb-1">
-                      {opt >= 1000 ? `${opt/1000}K` : opt}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Coins</div>
-                    
-                    {coins === opt && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-secondary rounded-full flex items-center justify-center shadow-glow-blue">
-                        <CheckCircle className="w-3 h-3 text-secondary-foreground" />
-                      </div>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
-
-            {/* Custom Input */}
-            <Card className="glass-card border-primary/20 p-4">
-              <div className="space-y-3">
-                <label className="block text-sm font-bold text-primary text-center">
-                  Custom Amount
-                </label>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    min="100"
-                    value={coins}
-                    onChange={(e) => handleCustomInput(e.target.value)}
-                    className="text-center text-lg py-3 bg-card/50 border-primary/30 focus:border-primary focus:ring-primary text-foreground placeholder:text-muted-foreground"
-                    placeholder="Enter coins, minimum 100"
-                  />
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-gold-gradient rounded-full flex items-center justify-center">
-                    <Coins className="w-4 h-4 text-primary-foreground" />
-                  </div>
-                </div>
-              </div>
-            </Card>
+          {/* Brand Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-6xl font-bold text-white mb-2">
+              COINFLIP<span className="text-primary">X</span>
+            </h1>
+            <p className="text-primary text-xl font-semibold tracking-wider">PLAY & WIN BIG</p>
           </div>
 
-          {/* Right: Payment Summary & CTA */}
-          <div className="flex flex-col justify-center space-y-4">
-            {/* Price Display */}
-            <Card className="glass-card border-secondary/30 p-6 bg-gradient-to-r from-secondary/10 to-primary/10 text-center">
-              <p className="text-sm text-muted-foreground mb-2">You will pay:</p>
-              <div className="text-4xl font-bold bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent mb-2">
-                ₹{priceINR}
-              </div>
-              <div className="flex items-center justify-center gap-2 text-foreground text-sm">
-                <span>for</span>
-                <span className="font-bold text-primary">{coins.toLocaleString()}</span>
-                <span>coins</span>
-              </div>
-            </Card>
+          {/* Title Section */}
+          <div className="text-center mb-8">
+            <h2 className="text-5xl font-bold text-white mb-4">Buy Coins</h2>
+            <p className="text-primary text-2xl font-bold">1 INR = 100 Coins</p>
+          </div>
 
-            {/* CTA Button */}
-            <Button
-              onClick={handlePayment}
-              disabled={!coins || coins < 100 || processing}
-              className="btn-hero text-primary-foreground font-bold py-4 px-8 text-xl rounded-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-            >
-              {processing ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
-                  <span>Processing...</span>
+          {/* Coin Packages Grid */}
+          <div className="grid grid-cols-3 gap-6 mb-8 w-full max-w-3xl">
+            {presetOptions.map((opt) => (
+              <Card
+                key={opt}
+                className={`relative cursor-pointer transition-all duration-300 hover:scale-105 p-6 ${
+                  coins === opt 
+                    ? 'bg-card/30 border-2 border-secondary shadow-glow-blue' 
+                    : 'bg-card/20 border-2 border-primary/30 hover:border-primary/50'
+                } backdrop-blur-sm`}
+                onClick={() => setCoins(opt)}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gold-gradient rounded-full flex items-center justify-center shadow-glow-gold">
+                    <Coins className="w-8 h-8 text-primary-foreground" />
+                  </div>
+                  <div className="text-3xl font-bold text-white">
+                    {opt.toLocaleString()}
+                  </div>
                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-5 h-5" />
-                  <span>Pay ₹{priceINR}</span>
-                  <Sparkles className="w-5 h-5" />
-                </div>
-              )}
-            </Button>
+              </Card>
+            ))}
+          </div>
 
-            {/* Footer Info */}
-            <div className="text-center space-y-2">
-              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3 text-primary" />
-                  <span>Instant</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <CheckCircle className="w-3 h-3 text-primary" />
-                  <span>Secure</span>
-                </div>
+          {/* Custom Input */}
+          <div className="w-full max-w-2xl mb-8">
+            <Input
+              type="number"
+              min="100"
+              value={coins}
+              onChange={(e) => handleCustomInput(e.target.value)}
+              className="w-full text-center text-xl py-6 bg-card/20 border-2 border-primary/30 focus:border-primary text-white placeholder:text-muted-foreground backdrop-blur-sm rounded-2xl"
+              placeholder="Enter coin amount"
+            />
+          </div>
+
+          {/* Payment Display */}
+          <div className="text-center mb-8">
+            <p className="text-white text-3xl font-semibold mb-4">
+              You will pay: <span className="text-primary">₹{priceINR}</span>
+            </p>
+          </div>
+
+          {/* CTA Button */}
+          <Button
+            onClick={handlePayment}
+            disabled={!coins || coins < 100 || processing}
+            className="bg-gold-gradient hover:shadow-glow-gold text-primary-foreground font-bold py-6 px-16 text-2xl rounded-2xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mb-8"
+          >
+            {processing ? (
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                <span>Processing...</span>
               </div>
-              <p className="text-xs text-muted-foreground opacity-70">
-                Terms & Conditions apply
-              </p>
-            </div>
+            ) : (
+              <span>Pay ₹{priceINR}</span>
+            )}
+          </Button>
+
+          {/* Footer */}
+          <div className="text-center space-y-2">
+            <p className="text-muted-foreground text-lg">Coins added instantly</p>
+            <p className="text-muted-foreground">Refund policy</p>
           </div>
         </div>
       </div>
