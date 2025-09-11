@@ -261,7 +261,7 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
               min="100"
               value={coins}
               onChange={(e) => handleCustomInput(e.target.value)}
-              className="w-full text-center text-2xl py-8 bg-card/20 border-2 border-primary/30 focus:border-primary text-white placeholder:text-muted-foreground backdrop-blur-sm rounded-2xl"
+              className="w-full text-center text-3xl font-bold py-8 bg-card/20 border-2 border-primary/30 focus:border-primary text-white placeholder:text-muted-foreground backdrop-blur-sm rounded-2xl"
               placeholder="Enter coin amount"
             />
           </div>
