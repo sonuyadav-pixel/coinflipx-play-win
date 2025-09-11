@@ -1,11 +1,26 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import CoinFlip from '@/components/CoinFlip';
 import LoginModal from '@/components/LoginModal';
+import { useAuth } from '@/hooks/useAuth';
 import heroImage from '@/assets/hero-srk.jpg';
 
 const Login = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  // Redirect authenticated users to game page
+  useEffect(() => {
+    if (user && !loading) {
+      navigate('/game');
+    }
+  }, [user, loading, navigate]);
+
+  const handleStartPlaying = () => {
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -45,7 +60,7 @@ const Login = () => {
               variant="hero" 
               size="lg" 
               className="text-lg px-8 py-4 min-w-48"
-              onClick={() => window.location.href = '/game'}
+              onClick={handleStartPlaying}
             >
               Start Playing Now
             </Button>

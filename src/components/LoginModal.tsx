@@ -5,6 +5,9 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import CoinFlip from './CoinFlip';
 import { Mail, Phone, Facebook, Chrome, Apple } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -13,6 +16,58 @@ interface LoginModalProps {
 
 const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { signUp, signIn } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const { error } = isSignUp 
+        ? await signUp(email, password)
+        : await signIn(email, password);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: isSignUp ? "Account created successfully!" : "Welcome back!",
+        });
+        onClose();
+        navigate('/game');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -38,57 +93,79 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         <div className="text-center mb-8">
           <CoinFlip size="md" className="mx-auto mb-4" />
           <h2 className="text-2xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-2">
-            Welcome to CoinFlipX
+            {isSignUp ? 'Join CoinFlipX' : 'Welcome Back'}
           </h2>
-          <p className="text-muted-foreground">Start playing and win big!</p>
+          <p className="text-muted-foreground">
+            {isSignUp ? 'Create your account to start playing!' : 'Sign in to continue your game!'}
+          </p>
         </div>
 
-        {/* Login Type Toggle */}
+        {/* Sign Up/Sign In Toggle */}
         <div className="flex bg-muted/50 p-1 rounded-lg mb-6">
           <button
-            onClick={() => setLoginType('email')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md transition-all ${
-              loginType === 'email'
+            onClick={() => setIsSignUp(false)}
+            className={`flex-1 py-2 px-4 rounded-md transition-all text-sm font-medium ${
+              !isSignUp
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Mail size={16} />
-            Email
+            Sign In
           </button>
           <button
-            onClick={() => setLoginType('phone')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md transition-all ${
-              loginType === 'phone'
+            onClick={() => setIsSignUp(true)}
+            className={`flex-1 py-2 px-4 rounded-md transition-all text-sm font-medium ${
+              isSignUp
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Phone size={16} />
-            Phone
+            Sign Up
           </button>
         </div>
 
         {/* Login Form */}
-        <div className="space-y-4 mb-6">
+        <form onSubmit={handleSubmit} className="space-y-4 mb-6">
           <div>
-            <Label htmlFor="login-input" className="text-sm font-medium">
-              {loginType === 'email' ? 'Email Address' : 'Phone Number'}
+            <Label htmlFor="email" className="text-sm font-medium">
+              Email Address
             </Label>
             <Input
-              id="login-input"
-              type={loginType === 'email' ? 'email' : 'tel'}
-              placeholder={
-                loginType === 'email' ? 'Enter your email' : 'Enter your phone number'
-              }
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
               className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
+              disabled={loading}
             />
           </div>
           
-          <Button variant="hero" size="lg" className="w-full">
-            Start Playing
+          <div>
+            <Label htmlFor="password" className="text-sm font-medium">
+              Password
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
+              disabled={loading}
+            />
+          </div>
+          
+          <Button 
+            type="submit" 
+            variant="hero" 
+            size="lg" 
+            className="w-full" 
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Start Playing')}
           </Button>
-        </div>
+        </form>
 
         {/* Divider */}
         <div className="relative my-6">

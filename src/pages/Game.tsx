@@ -1,10 +1,38 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import CoinFlip from '@/components/CoinFlip';
 import LoginModal from '@/components/LoginModal';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 const Game = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect unauthenticated users to home page
+  useEffect(() => {
+    if (!user && !loading) {
+      navigate('/');
+    }
+  }, [user, loading, navigate]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-hero-gradient flex items-center justify-center">
+        <CoinFlip size="lg" className="coin-glow" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect in useEffect
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -12,20 +40,32 @@ const Game = () => {
       <div className="absolute inset-0 bg-hero-gradient"></div>
 
       {/* Content */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6">
-        {/* Header with Login */}
-        <div className="absolute top-6 right-6">
-          <Button 
-            variant="glass" 
-            onClick={() => setIsModalOpen(true)}
-            className="px-6"
-          >
-            Login
-          </Button>
-        </div>
+      <div className="relative z-10 min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="flex justify-between items-center p-6">
+          <div className="flex items-center gap-2">
+            <CoinFlip size="sm" />
+            <h1 className="text-xl font-bold bg-gold-gradient bg-clip-text text-transparent">
+              CoinFlipX
+            </h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              Welcome, {user.email}
+            </span>
+            <Button 
+              variant="glass" 
+              onClick={handleSignOut}
+              className="text-sm"
+            >
+              Sign Out
+            </Button>
+          </div>
+        </header>
 
         {/* Coming Soon Content */}
-        <div className="text-center max-w-2xl mx-auto">
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="text-center max-w-2xl mx-auto">
           <CoinFlip size="lg" className="mx-auto mb-8" />
           
           <h1 className="text-4xl md:text-6xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-6">
@@ -71,21 +111,22 @@ const Game = () => {
             </div>
           </div>
 
-          <Button 
-            variant="hero" 
-            size="lg" 
-            className="text-lg px-8 py-4"
-            onClick={() => setIsModalOpen(true)}
-          >
-            Get Early Access
-          </Button>
-        </div>
+            <Button 
+              variant="hero" 
+              size="lg"
+              disabled
+              className="px-8 py-3 opacity-50"
+            >
+              Game Coming Soon
+            </Button>
+          </div>
 
-        {/* Footer */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
-          <p className="text-sm text-muted-foreground text-center">
-            18+ Only | Play Responsibly | Licensed Gaming Platform
-          </p>
+          {/* Footer */}
+          <div className="mt-8">
+            <p className="text-sm text-muted-foreground text-center">
+              18+ Only | Play Responsibly | Licensed Gaming Platform
+            </p>
+          </div>
         </div>
       </div>
 
