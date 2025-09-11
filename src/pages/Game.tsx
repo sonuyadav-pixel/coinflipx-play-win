@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import CoinFlip from '@/components/CoinFlip';
 import LoginModal from '@/components/LoginModal';
 import CoinHistoryModal from '@/components/CoinHistoryModal';
+import BuyCoinsModal from '@/components/BuyCoinsModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ const Game = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userCoins, setUserCoins] = useState<any>(null);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
+  const [showBuyCoins, setShowBuyCoins] = useState(false);
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -51,9 +53,10 @@ const Game = () => {
   };
 
   const handleAddCoins = () => {
-    // TODO: Implement add coins functionality
     console.log('Add coins clicked');
     setShowCoinHistory(false);
+    setShowBuyCoins(true);
+    console.log('Buy coins modal should open now');
   };
 
   const handleSignOut = async () => {
@@ -199,6 +202,12 @@ const Game = () => {
         onClose={() => setShowCoinHistory(false)}
         userCoins={userCoins}
         onAddCoins={handleAddCoins}
+      />
+
+      {/* Buy Coins Modal */}
+      <BuyCoinsModal
+        isOpen={showBuyCoins}
+        onClose={() => setShowBuyCoins(false)}
       />
 
       {/* Login Modal */}
