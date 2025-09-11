@@ -21,23 +21,32 @@ serve(async (req) => {
     );
 
     // Get request body
-    const { email, coinAmount } = await req.json();
+    const body = await req.json();
+    console.log('Request body:', body);
     
-    if (!email || !coinAmount) {
+    const { email, coinAmount, user_email, coin_amount } = body;
+    
+    // Accept both parameter formats for compatibility
+    const userEmail = email || user_email;
+    const coinsToAdd = coinAmount || coin_amount;
+    
+    if (!userEmail || !coinsToAdd) {
+      console.error('Missing parameters:', { userEmail, coinsToAdd });
       return new Response(JSON.stringify({ 
-        error: 'Email and coinAmount are required' 
+        error: 'Email and coinAmount are required',
+        received: { userEmail, coinsToAdd }
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`Adding ${coinAmount} coins to user with email: ${email}`);
+    console.log(`Adding ${coinsToAdd} coins to user with email: ${userEmail}`);
 
     // Call the admin function
     const { data, error } = await supabase.rpc('admin_add_coins', {
-      _user_email: email,
-      _coin_amount: coinAmount
+      _user_email: userEmail,
+      _coin_amount: coinsToAdd
     });
 
     if (error) {

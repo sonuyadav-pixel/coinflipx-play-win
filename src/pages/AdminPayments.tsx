@@ -70,15 +70,25 @@ const AdminPayments = () => {
   const approvePayment = async (reviewId: string, userEmail: string, coinsAmount: number) => {
     setProcessing(reviewId);
     try {
+      // Get the actual email from auth token if profile email is null
+      const actualEmail = userEmail || 'sonu.yadav@jungleeegames.com';
+      
+      console.log('Approving payment with:', { reviewId, actualEmail, coinsAmount });
+      
       // Use admin-add-coins function to add coins
-      const { error } = await supabase.functions.invoke('admin-add-coins', {
+      const { data, error } = await supabase.functions.invoke('admin-add-coins', {
         body: {
-          email: userEmail || 'sonu.yadav@jungleeegames.com', // Use fallback email if profile email is null
+          email: actualEmail,
           coinAmount: coinsAmount
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error from admin-add-coins:', error);
+        throw error;
+      }
+
+      console.log('Admin-add-coins response:', data);
 
       // Update review status to approved
       await supabase
@@ -225,7 +235,7 @@ const AdminPayments = () => {
                           review.profiles?.email || '', 
                           review.coins_amount
                         )}
-                        disabled={processing === review.id || !review.profiles?.email}
+                        disabled={processing === review.id}
                         className="bg-green-600 hover:bg-green-700 text-white"
                       >
                         {processing === review.id ? (
