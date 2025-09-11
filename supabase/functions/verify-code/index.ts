@@ -61,13 +61,17 @@ const handler = async (req: Request): Promise<Response> => {
       .delete()
       .eq('email', email);
 
-    // Create or get user
-    const { data: userData, error: userError } = await supabase.auth.admin.createUser({
+    // Create or get user - handle existing users gracefully
+    let userData = null;
+    const { data: createData, error: userError } = await supabase.auth.admin.createUser({
       email,
       email_confirm: true,
     });
 
-    if (userError && !userError.message.includes("already registered")) {
+    if (userError && userError.message.includes("already registered")) {
+      // User already exists, that's fine - we'll generate a session for them
+      console.log(`User ${email} already exists, proceeding with session generation`);
+    } else if (userError) {
       console.error("Error creating user:", userError);
       return new Response(
         JSON.stringify({ error: "Failed to create user" }),
@@ -76,6 +80,8 @@ const handler = async (req: Request): Promise<Response> => {
           headers: { "Content-Type": "application/json", ...corsHeaders },
         }
       );
+    } else {
+      userData = createData;
     }
 
     // Generate session for the user
