@@ -16,12 +16,7 @@ const Game = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect unauthenticated users to home page
-  useEffect(() => {
-    if (!user && !loading) {
-      navigate('/');
-    }
-  }, [user, loading, navigate]);
+  // Authentication is now handled by AuthGuard
 
   useEffect(() => {
     if (user) {
@@ -61,17 +56,7 @@ const Game = () => {
     navigate('/');
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-hero-gradient flex items-center justify-center">
-        <CoinFlip size="lg" className="coin-glow" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect in useEffect
-  }
+  // Loading and authentication checks are now handled by AuthGuard
 
   return (
     <div className="min-h-screen relative overflow-hidden">

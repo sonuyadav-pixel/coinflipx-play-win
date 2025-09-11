@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Game from "./pages/Game";
 import CoinGame from "./pages/CoinGame";
 import NotFound from "./pages/NotFound";
+import AuthGuard from "./components/AuthGuard";
 
 const queryClient = new QueryClient();
 
@@ -19,8 +20,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/game" element={<Game />} />
-          <Route path="/coin-game" element={<CoinGame />} />
+          <Route path="/game" element={<AuthGuard><Game /></AuthGuard>} />
+          <Route path="/coin-game" element={<AuthGuard><CoinGame /></AuthGuard>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
