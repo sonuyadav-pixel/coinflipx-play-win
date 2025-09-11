@@ -166,6 +166,11 @@
     animation: sparkleMove 4s ease-in-out infinite;
     pointer-events: none;
   }
+
+  /* Glow Effects for Timer */
+  .glow-red {
+    text-shadow: 0 0 20px hsl(var(--destructive)), 0 0 40px hsl(var(--destructive));
+  }
 }
 
 @keyframes coinFlip {

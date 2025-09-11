@@ -123,6 +123,7 @@ const Game = () => {
               variant="hero" 
               size="lg"
               className="px-8 py-3"
+              onClick={() => navigate('/coin-game')}
             >
               Play Now
             </Button>
