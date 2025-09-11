@@ -4,6 +4,7 @@ import { CircleDollarSign, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import CoinFlip from "@/components/CoinFlip";
+import HandFlipCoin from "@/components/HandFlipCoin";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
@@ -27,6 +28,14 @@ const CoinGame = () => {
   const [showBettingPopup, setShowBettingPopup] = useState(false);
   const [selectedBetSide, setSelectedBetSide] = useState<'Heads' | 'Tails'>('Heads');
   const [isPlacingBet, setIsPlacingBet] = useState(false);
+  const [coinFlipTriggered, setCoinFlipTriggered] = useState(false);
+
+  // Auto-close betting popup when phase changes from betting
+  useEffect(() => {
+    if (phase !== "bet" && showBettingPopup) {
+      setShowBettingPopup(false);
+    }
+  }, [phase, showBettingPopup]);
 
   // Create new round when component mounts
   useEffect(() => {
@@ -195,22 +204,27 @@ const CoinGame = () => {
   };
 
   useEffect(() => {
-    if (timeLeft === 0) {
-      // Start coin flip animation
-      setFlipping(true);
+    if (timeLeft === 0 && phase === "bet") {
+      // Start coin flip phase
+      setPhase("flip");
+      setCoinFlipTriggered(true);
+      
       setTimeout(() => {
         const coin = Math.random() < 0.5 ? "Heads" : "Tails";
         setResult(coin);
-        setFlipping(false);
-        setShowPopup(true);
-        setPopupTimer(10);
-        finalizeCoinFlip(coin);
-      }, 3000); // Video duration
-    } else {
+        setTimeout(() => {
+          setPhase("result");
+          setShowPopup(true);
+          setPopupTimer(10);
+          finalizeCoinFlip(coin);
+          setCoinFlipTriggered(false);
+        }, 3000); // Show result for 3 seconds
+      }, 2000); // Flip for 2 seconds
+    } else if (phase === "bet") {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
     }
-  }, [timeLeft]);
+  }, [timeLeft, phase]);
 
   // Popup timer effect
   useEffect(() => {
@@ -226,6 +240,8 @@ const CoinGame = () => {
     setShowPopup(false);
     setResult(null);
     setPopupTimer(10);
+    setPhase("bet");
+    setCoinFlipTriggered(false);
     createNewRound(); // Start new round
   };
 
@@ -269,69 +285,52 @@ const CoinGame = () => {
             
             {/* Phase Title */}
             <h1 className="text-3xl md:text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-8">
-              Betting Phase
+              {phase === "bet" ? "Betting Phase" : phase === "flip" ? "Coin Flipping" : "Results"}
             </h1>
 
-            {/* Timer with circular progress */}
-            <div className="relative w-40 h-40 flex items-center justify-center mb-8 mx-auto">
-              <svg className="absolute top-0 left-0 w-full h-full -rotate-90">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke="hsl(var(--muted))"
-                  strokeWidth="8"
-                  fill="none"
-                />
-                <motion.circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke={timeLeft <= 10 ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
-                  strokeWidth="8"
-                  fill="none"
-                  strokeDasharray={2 * Math.PI * 70}
-                  strokeDashoffset={(1 - progress / 100) * 2 * Math.PI * 70}
-                  initial={false}
-                  animate={{ strokeDashoffset: (1 - progress / 100) * 2 * Math.PI * 70 }}
-                  transition={{ duration: 1, ease: "linear" }}
-                />
-              </svg>
-              <div
-                className={`font-mono font-bold transition-all duration-300 ${
-                  timeLeft <= 10 ? "text-destructive text-6xl animate-pulse glow-red" : "text-primary text-4xl"
-                }`}
-              >
-                {timeLeft}s
-              </div>
-            </div>
-
-            {/* Coin Flip Video Animation */}
-            <AnimatePresence>
-              {flipping && (
-                <motion.div
-                  key="coin-flip-video"
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0, opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                  className="flex flex-col items-center mb-8"
+            {/* Timer with circular progress - only show during betting phase */}
+            {phase === "bet" && (
+              <div className="relative w-40 h-40 flex items-center justify-center mb-8 mx-auto">
+                <svg className="absolute top-0 left-0 w-full h-full -rotate-90">
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="70"
+                    stroke="hsl(var(--muted))"
+                    strokeWidth="8"
+                    fill="none"
+                  />
+                  <motion.circle
+                    cx="80"
+                    cy="80"
+                    r="70"
+                    stroke={timeLeft <= 10 ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+                    strokeWidth="8"
+                    fill="none"
+                    strokeDasharray={2 * Math.PI * 70}
+                    strokeDashoffset={(1 - progress / 100) * 2 * Math.PI * 70}
+                    initial={false}
+                    animate={{ strokeDashoffset: (1 - progress / 100) * 2 * Math.PI * 70 }}
+                    transition={{ duration: 1, ease: "linear" }}
+                  />
+                </svg>
+                <div
+                  className={`font-mono font-bold transition-all duration-300 ${
+                    timeLeft <= 10 ? "text-destructive text-6xl animate-pulse glow-red" : "text-primary text-4xl"
+                  }`}
                 >
-                  <video
-                    autoPlay
-                    muted
-                    className="w-64 h-64 rounded-full object-cover"
-                    onEnded={() => {/* Video will end and result will show */}}
-                  >
-                    <source src="/src/assets/coin-flip.mp4" type="video/mp4" />
-                  </video>
-                  <p className="mt-4 text-lg text-muted-foreground">Flipping coin...</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  {timeLeft}s
+                </div>
+              </div>
+            )}
+
+            {/* Hand Flip Coin Animation */}
+            {phase === "flip" && (
+              <HandFlipCoin trigger={coinFlipTriggered} result={result} />
+            )}
 
             {/* User Bet Status */}
-            {userBet && !showPopup && !flipping && (
+            {userBet && phase === "bet" && (
               <div className="mb-6 p-4 glass-card rounded-lg border border-green-500">
                 <p className="text-green-400 text-center font-semibold">
                   ✅ Bet placed: ${userBet.bet_amount} on {userBet.bet_side}
@@ -340,7 +339,7 @@ const CoinGame = () => {
             )}
 
             {/* Betting Phase */}
-            {!showPopup && !flipping && (
+            {phase === "bet" && (
               <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto">
                 <p className="text-xl text-foreground">Place your bets!</p>
                 <p className="text-sm text-muted-foreground">
@@ -374,9 +373,9 @@ const CoinGame = () => {
                   <motion.div whileTap={{ scale: 0.95 }}>
                     <Button 
                       onClick={() => handleBetClick('Heads')}
-                      disabled={!!userBet || timeLeft <= 0}
+                      disabled={!!userBet || timeLeft <= 0 || phase !== "bet"}
                       className={`px-8 py-4 text-lg font-bold shadow-lg flex items-center gap-2 ${
-                        userBet || timeLeft <= 0 
+                        userBet || timeLeft <= 0 || phase !== "bet"
                           ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
                           : 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black'
                       }`}
@@ -389,9 +388,9 @@ const CoinGame = () => {
                   <motion.div whileTap={{ scale: 0.95 }}>
                     <Button 
                       onClick={() => handleBetClick('Tails')}
-                      disabled={!!userBet || timeLeft <= 0}
+                      disabled={!!userBet || timeLeft <= 0 || phase !== "bet"}
                       className={`px-8 py-4 text-lg font-bold shadow-lg flex items-center gap-2 ${
-                        userBet || timeLeft <= 0 
+                        userBet || timeLeft <= 0 || phase !== "bet"
                           ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
                           : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                       }`}
@@ -433,9 +432,9 @@ const CoinGame = () => {
         </div>
       </div>
 
-      {/* Betting Popup */}
+      {/* Betting Popup - only show during betting phase */}
       <BettingPopup
-        isOpen={showBettingPopup}
+        isOpen={showBettingPopup && phase === "bet"}
         onClose={() => setShowBettingPopup(false)}
         onPlaceBet={handlePlaceBet}
         betSide={selectedBetSide}
