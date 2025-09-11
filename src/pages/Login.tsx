@@ -40,21 +40,14 @@ const Login = () => {
           </p>
           
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex justify-center">
             <Button 
               variant="hero" 
               size="lg" 
               className="text-lg px-8 py-4 min-w-48"
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => window.location.href = '/game'}
             >
               Start Playing Now
-            </Button>
-            <Button 
-              variant="glass" 
-              size="lg" 
-              className="text-lg px-8 py-4 min-w-48"
-            >
-              Watch Demo
             </Button>
           </div>
         </div>
