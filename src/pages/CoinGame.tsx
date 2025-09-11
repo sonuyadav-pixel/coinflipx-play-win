@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import BettingPopup from "@/components/BettingPopup";
+import CoinHistoryModal from "@/components/CoinHistoryModal";
 import Confetti from "react-confetti";
 
 const CoinGame = () => {
@@ -33,6 +34,7 @@ const CoinGame = () => {
   const [winAmount, setWinAmount] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [userCoins, setUserCoins] = useState<any>(null);
+  const [showCoinHistory, setShowCoinHistory] = useState(false);
 
   // Create new round when component mounts
   useEffect(() => {
@@ -358,6 +360,12 @@ const CoinGame = () => {
     navigate("/game");
   };
 
+  const handleAddCoins = () => {
+    // TODO: Implement add coins functionality
+    console.log('Add coins clicked');
+    setShowCoinHistory(false);
+  };
+
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background */}
@@ -385,15 +393,18 @@ const CoinGame = () => {
             </h1>
           </div>
           
-          {/* User Coin Balance */}
+          {/* User Coin Balance - Clickable */}
           {user && userCoins && (
-            <div className="flex items-center gap-2 glass-card px-4 py-2 rounded-lg">
-              <div className="text-2xl">🪙</div>
+            <button
+              onClick={() => setShowCoinHistory(true)}
+              className="flex items-center gap-2 glass-card px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <Coins className="w-5 h-5 text-primary" />
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Your Coins</p>
                 <p className="text-lg font-bold text-primary">{Math.floor(userCoins.balance).toLocaleString()}</p>
               </div>
-            </div>
+            </button>
           )}
         </header>
 
@@ -585,6 +596,14 @@ const CoinGame = () => {
         onPlaceBet={handlePlaceBet}
         betSide={selectedBetSide}
         isPlacing={isPlacingBet}
+      />
+
+      {/* Coin History Modal */}
+      <CoinHistoryModal
+        isOpen={showCoinHistory}
+        onClose={() => setShowCoinHistory(false)}
+        userCoins={userCoins}
+        onAddCoins={handleAddCoins}
       />
 
       {/* Confetti */}
