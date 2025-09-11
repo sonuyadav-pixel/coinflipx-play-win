@@ -375,18 +375,20 @@ const CoinGame = () => {
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
-        <header className="flex justify-between items-center p-6">
+        <header className="flex justify-between items-center p-4 md:p-6">
           <Button 
             variant="glass" 
             onClick={handleBackToGame}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 text-xs md:text-sm"
+            size="sm"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Lobby
+            <span className="hidden sm:inline">Back to Lobby</span>
+            <span className="sm:hidden">Back</span>
           </Button>
           <div className="flex items-center gap-2">
             <CoinFlip size="sm" />
-            <h1 className="text-xl font-bold bg-gold-gradient bg-clip-text text-transparent">
+            <h1 className="text-base md:text-xl font-bold bg-gold-gradient bg-clip-text text-transparent">
               CoinFlipX Live
             </h1>
           </div>
@@ -395,29 +397,29 @@ const CoinGame = () => {
           {user && userCoins && (
             <button
               onClick={() => setShowCoinHistory(true)}
-              className="flex items-center gap-2 glass-card px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              className="flex items-center gap-1 md:gap-2 glass-card px-2 md:px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer min-w-0"
             >
-              <Coins className="w-5 h-5 text-primary" />
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Your Coins</p>
-                <p className="text-lg font-bold text-primary">{Math.floor(userCoins.balance).toLocaleString()}</p>
+              <Coins className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
+              <div className="text-right min-w-0">
+                <p className="text-xs md:text-sm text-muted-foreground">Your Coins</p>
+                <p className="text-sm md:text-lg font-bold text-primary truncate">{Math.floor(userCoins.balance).toLocaleString()}</p>
               </div>
             </button>
           )}
         </header>
 
         {/* Main Game Area */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="text-center max-w-2xl mx-auto">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6">
+          <div className="text-center max-w-2xl mx-auto w-full">
             
             {/* Phase Title */}
-            <h1 className="text-3xl md:text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-8">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-6 md:mb-8">
               {timeLeft > 0 ? "Betting Phase" : "Coin Flipping"}
             </h1>
 
             {/* Timer with circular progress - only show during betting */}
             {timeLeft > 0 && (
-              <div className="relative w-40 h-40 flex items-center justify-center mb-8 mx-auto">
+              <div className="relative w-32 h-32 md:w-40 md:h-40 flex items-center justify-center mb-6 md:mb-8 mx-auto">
                 <svg className="absolute top-0 left-0 w-full h-full -rotate-90">
                   <circle
                     cx="80"
@@ -443,7 +445,7 @@ const CoinGame = () => {
                 </svg>
                 <div
                   className={`font-mono font-bold transition-all duration-300 ${
-                    timeLeft <= 10 ? "text-destructive text-6xl animate-pulse glow-red" : "text-primary text-4xl"
+                    timeLeft <= 10 ? "text-destructive text-4xl md:text-6xl animate-pulse glow-red" : "text-primary text-3xl md:text-4xl"
                   }`}
                 >
                   {timeLeft}s
@@ -463,7 +465,7 @@ const CoinGame = () => {
                   transition={{ duration: 0.1 }}
                   className="flex flex-col items-center mb-8"
                 >
-                  <div className="relative w-64 h-64 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 via-accent/30 to-primary/40 shadow-2xl border border-primary/30">
+                  <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 via-accent/30 to-primary/40 shadow-2xl border border-primary/30">
                     <div className="absolute inset-0 bg-hero-gradient opacity-60"></div>
                     <video
                       autoPlay
@@ -476,7 +478,7 @@ const CoinGame = () => {
                     </video>
                     <div className="absolute inset-0 sparkles pointer-events-none"></div>
                   </div>
-                  <p className="mt-4 text-lg text-muted-foreground">Flipping coin...</p>
+                  <p className="mt-4 text-base md:text-lg text-muted-foreground">Flipping coin...</p>
                 </motion.div>
               )}
             </AnimatePresence>

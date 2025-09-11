@@ -51,12 +51,12 @@ export default function BettingPopup({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50 p-4">
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0, opacity: 0 }}
-        className={`bg-gray-900 border-2 ${borderColor} rounded-2xl p-8 max-w-md w-full mx-4 relative`}
+        className={`bg-gray-900 border-2 ${borderColor} rounded-2xl p-4 md:p-8 max-w-md w-full mx-auto relative max-h-[90vh] overflow-y-auto`}
       >
         {/* Close Button */}
         <Button
@@ -70,11 +70,11 @@ export default function BettingPopup({
         </Button>
 
         {/* Header */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-white mb-2">
+        <div className="text-center mb-4 md:mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
             Place Your Bet
           </h2>
-          <p className="text-lg text-gray-300">
+          <p className="text-base md:text-lg text-gray-300">
             Betting on: <span className={`font-bold ${betSide === 'Heads' ? 'text-yellow-400' : 'text-blue-400'}`}>
               {betSide}
             </span>
@@ -82,16 +82,16 @@ export default function BettingPopup({
         </div>
 
         {/* Preset Amounts */}
-        <div className="mb-6">
-          <h3 className="text-white font-semibold mb-3">Select Amount:</h3>
-          <div className="grid grid-cols-5 gap-2">
+        <div className="mb-4 md:mb-6">
+          <h3 className="text-white font-semibold mb-3 text-sm md:text-base">Select Amount:</h3>
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
             {PRESET_AMOUNTS.map((amount) => (
               <Button
                 key={amount}
                 onClick={() => handleAmountSelect(amount)}
                 variant={selectedAmount === amount ? "default" : "outline"}
                 size="sm"
-                className={`text-xs ${
+                className={`text-xs min-h-[44px] ${
                   selectedAmount === amount 
                     ? buttonColor + " text-white" 
                     : "border-gray-600 text-gray-300 hover:bg-gray-800"

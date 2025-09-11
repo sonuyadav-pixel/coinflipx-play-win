@@ -58,59 +58,60 @@ const Game = () => {
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
-        <header className="flex justify-between items-center p-6">
+        <header className="flex justify-between items-center p-4 md:p-6">
           <div className="flex items-center gap-2">
             <CoinFlip size="sm" />
-            <h1 className="text-xl font-bold bg-gold-gradient bg-clip-text text-transparent">
+            <h1 className="text-base md:text-xl font-bold bg-gold-gradient bg-clip-text text-transparent">
               CoinFlipX
             </h1>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             {/* User Coin Balance - Clickable */}
             {userCoins && (
               <button
                 onClick={() => setShowCoinHistory(true)}
-                className="flex items-center gap-2 glass-card px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                className="flex items-center gap-1 md:gap-2 glass-card px-2 md:px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer min-w-0"
               >
-                <Coins className="w-5 h-5 text-primary" />
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Your Coins</p>
-                  <p className="text-lg font-bold text-primary">{Math.floor(userCoins.balance).toLocaleString()}</p>
+                <Coins className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
+                <div className="text-right min-w-0">
+                  <p className="text-xs md:text-sm text-muted-foreground">Your Coins</p>
+                  <p className="text-sm md:text-lg font-bold text-primary truncate">{Math.floor(userCoins.balance).toLocaleString()}</p>
                 </div>
               </button>
             )}
             
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-2 glass-card px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              className="flex items-center gap-1 md:gap-2 glass-card px-2 md:px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
             >
-              <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center">
+              <div className="w-4 h-4 md:w-5 md:h-5 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
                 <div className="w-2 h-2 rounded-full bg-red-500"></div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Account</p>
-                <p className="text-sm font-medium text-foreground">Sign Out</p>
+              <div className="text-right hidden sm:block">
+                <p className="text-xs md:text-sm text-muted-foreground">Account</p>
+                <p className="text-xs md:text-sm font-medium text-foreground">Sign Out</p>
               </div>
             </button>
           </div>
         </header>
 
         {/* Coming Soon Content */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="text-center max-w-2xl mx-auto">
-          <div className="flex items-center justify-center mb-8">
+        <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-6">
+          <div className="text-center max-w-2xl mx-auto w-full">
+          <div className="flex items-center justify-center mb-6 md:mb-8">
             <CoinFlip size="lg" className="coin-glow" />
           </div>
           
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <h1 className="text-4xl md:text-6xl font-bold bg-gold-gradient bg-clip-text text-transparent">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 mb-4 md:mb-6">
+            <span className="text-3xl md:text-5xl lg:text-6xl animate-pulse">💵</span>
+            <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold bg-gold-gradient bg-clip-text text-transparent text-center">
               Play and win Coins
             </h1>
-            <span className="text-5xl md:text-6xl animate-pulse">💵</span>
+            <span className="text-3xl md:text-5xl lg:text-6xl animate-pulse">💵</span>
           </div>
           
-          <p className="text-lg md:text-xl text-muted-foreground mb-8">
+          <p className="text-sm md:text-lg lg:text-xl text-muted-foreground mb-6 md:mb-8 px-4">
             The ultimate coin flipping experience is here! 
             Start with 1000 free coins and play to win more!
           </p>
@@ -118,41 +119,41 @@ const Game = () => {
           <Button 
             variant="hero" 
             size="lg"
-            className="px-12 py-4 text-xl font-bold mb-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            className="px-8 md:px-12 py-3 md:py-4 text-lg md:text-xl font-bold mb-6 md:mb-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full max-w-xs active:scale-95"
             onClick={() => navigate('/coin-game')}
           >
             Play Now
           </Button>
 
-          <div className="glass-card p-8 rounded-2xl mb-8">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">What to Expect</h2>
+          <div className="glass-card p-4 md:p-8 rounded-2xl mb-6 md:mb-8 mx-4 sm:mx-0">
+            <h2 className="text-xl md:text-2xl font-semibold text-foreground mb-4">What to Expect</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
               <div className="flex items-start gap-3">
-                <span className="text-primary">✨</span>
+                <span className="text-primary text-lg">✨</span>
                 <div>
-                  <h3 className="font-medium text-foreground">Real-time Gaming</h3>
-                  <p className="text-sm text-muted-foreground">Live coin flips with instant results</p>
+                  <h3 className="font-medium text-foreground text-sm md:text-base">Real-time Gaming</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">Live coin flips with instant results</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-primary">🪙</span>
+                <span className="text-primary text-lg">🪙</span>
                 <div>
-                  <h3 className="font-medium text-foreground">Virtual Coins</h3>
-                  <p className="text-sm text-muted-foreground">Play with virtual coins - no real money</p>
+                  <h3 className="font-medium text-foreground text-sm md:text-base">Virtual Coins</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">Play with virtual coins - no real money</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-primary">💎</span>
+                <span className="text-primary text-lg">💎</span>
                 <div>
-                  <h3 className="font-medium text-foreground">2X Winnings</h3>
-                  <p className="text-sm text-muted-foreground">Double your coins when you win</p>
+                  <h3 className="font-medium text-foreground text-sm md:text-base">2X Winnings</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">Double your coins when you win</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-primary">📱</span>
+                <span className="text-primary text-lg">📱</span>
                 <div>
-                  <h3 className="font-medium text-foreground">Mobile Optimized</h3>
-                  <p className="text-sm text-muted-foreground">Perfect gaming on any device</p>
+                  <h3 className="font-medium text-foreground text-sm md:text-base">Mobile Optimized</h3>
+                  <p className="text-xs md:text-sm text-muted-foreground">Perfect gaming on any device</p>
                 </div>
               </div>
             </div>
@@ -160,8 +161,8 @@ const Game = () => {
           </div>
 
           {/* Footer */}
-          <div className="mt-8">
-            <p className="text-sm text-muted-foreground text-center">
+          <div className="mt-4 md:mt-8 px-4">
+            <p className="text-xs md:text-sm text-muted-foreground text-center">
               18+ Only | Play Responsibly | Virtual Coins Only
             </p>
           </div>

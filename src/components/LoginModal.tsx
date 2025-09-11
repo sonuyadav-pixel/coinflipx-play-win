@@ -129,7 +129,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
       ></div>
       
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-card/95 backdrop-blur-xl border border-primary/20 rounded-2xl p-8 shadow-2xl">
+      <div className="relative w-full max-w-md bg-card/95 backdrop-blur-xl border border-primary/20 rounded-2xl p-4 md:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -139,12 +139,12 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         </button>
 
         {/* Header with Coin */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6 md:mb-8">
           <CoinFlip size="md" className="mx-auto mb-4" />
-          <h2 className="text-2xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-2">
+          <h2 className="text-xl md:text-2xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-2">
             {isSignUp ? 'Join CoinFlipX' : 'Welcome Back'}
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-sm md:text-base text-muted-foreground">
             {isSignUp 
               ? 'Create your account to start playing!'
               : 'Sign in to continue your winning streak!'
@@ -153,7 +153,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         </div>
 
         {/* Email/Password Form */}
-        <form onSubmit={handleSubmit} className="space-y-4 mb-6">
+        <form onSubmit={handleSubmit} className="space-y-4 mb-4 md:mb-6">
           <div>
             <Label htmlFor="email" className="text-sm font-medium">
               Email Address
@@ -164,7 +164,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
+              className="mt-1 bg-input/50 border-border/50 focus:border-primary/50 min-h-[44px]"
               disabled={loading}
               required
             />
@@ -180,7 +180,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
+              className="mt-1 bg-input/50 border-border/50 focus:border-primary/50 min-h-[44px]"
               disabled={loading}
               required
               minLength={6}
@@ -191,7 +191,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             type="submit" 
             variant="hero" 
             size="lg" 
-            className="w-full" 
+            className="w-full min-h-[44px]" 
             disabled={loading}
           >
             {loading ? 'Processing...' : (isSignUp ? 'Create Account' : 'Sign In')}
@@ -222,30 +222,32 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           <Button 
             variant="glass" 
             size="lg" 
-            className="w-full justify-start" 
+            className="w-full justify-start min-h-[44px]" 
             onClick={handleGoogleSignIn}
             disabled={loading}
           >
             <Chrome size={18} />
-            Continue with Google
+            <span className="ml-2">Continue with Google</span>
           </Button>
           <Button 
             variant="glass" 
             size="lg" 
-            className="w-full justify-start opacity-50" 
+            className="w-full justify-start opacity-50 min-h-[44px]" 
             disabled
           >
             <Facebook size={18} />
-            Facebook (Coming Soon)
+            <span className="ml-2 hidden sm:inline">Facebook (Coming Soon)</span>
+            <span className="ml-2 sm:hidden">Facebook</span>
           </Button>
           <Button 
             variant="glass" 
             size="lg" 
-            className="w-full justify-start opacity-50" 
+            className="w-full justify-start opacity-50 min-h-[44px]" 
             disabled
           >
             <Apple size={18} />
-            Apple (Coming Soon)
+            <span className="ml-2 hidden sm:inline">Apple (Coming Soon)</span>
+            <span className="ml-2 sm:hidden">Apple</span>
           </Button>
         </div>
 

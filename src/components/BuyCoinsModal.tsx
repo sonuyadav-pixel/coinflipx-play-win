@@ -231,12 +231,12 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={handleClose}>
-        <DialogContent className="max-w-4xl bg-card/95 border-primary/20 backdrop-blur-sm max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl bg-card/95 border-primary/20 backdrop-blur-sm max-h-[90vh] overflow-y-auto mx-4">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Crown className="w-6 h-6 text-primary" />
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                <Crown className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+                <h2 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                   Buy Coins
                 </h2>
               </div>
@@ -244,49 +244,50 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
                 variant="ghost"
                 onClick={handleClose}
                 className="hover:bg-primary/10 hover:text-primary transition-all duration-300"
+                size="sm"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
             </div>
           </DialogHeader>
 
-          <div className="p-6">
+          <div className="p-4 md:p-6">
             {/* Brand Header */}
-            <div className="text-center mb-6">
-              <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="text-center mb-4 md:mb-6">
+              <div className="flex items-center justify-center gap-2 md:gap-4 mb-4">
                 <CoinFlip size="md" />
-                <h1 className="text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent">
+                <h1 className="text-2xl md:text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent">
                   CoinFlipX
                 </h1>
               </div>
             </div>
 
             {/* Rate Display */}
-            <div className="text-center mb-6">
-              <p className="text-primary text-xl font-bold">1 INR = 100 Coins</p>
+            <div className="text-center mb-4 md:mb-6">
+              <p className="text-primary text-lg md:text-xl font-bold">1 INR = 100 Coins</p>
             </div>
 
             {/* Coin Packages Grid */}
-            <div className="grid grid-cols-3 gap-4 mb-6 w-full max-w-2xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6 w-full max-w-2xl mx-auto">
               {presetOptions.map((opt) => (
                 <Card
                   key={opt}
-                  className={`relative cursor-pointer transition-all duration-300 hover:scale-105 p-4 ${
+                  className={`relative cursor-pointer transition-all duration-300 hover:scale-105 p-3 md:p-4 min-h-[80px] md:min-h-[100px] ${
                     coins === opt 
                       ? 'bg-gold-gradient border-2 border-primary shadow-glow-gold' 
                       : 'bg-card/20 border-2 border-primary/30 hover:border-primary/50'
                   } backdrop-blur-sm`}
                   onClick={() => setCoins(opt)}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-glow-gold ${
+                  <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-2 md:gap-3 h-full">
+                    <div className={`w-8 h-8 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-glow-gold ${
                       coins === opt ? 'bg-white' : 'bg-gold-gradient'
                     }`}>
-                      <Coins className={`w-6 h-6 ${
+                      <Coins className={`w-4 h-4 md:w-6 md:h-6 ${
                         coins === opt ? 'text-black' : 'text-primary-foreground'
                       }`} />
                     </div>
-                    <div className={`text-2xl font-bold ${
+                    <div className={`text-lg md:text-2xl font-bold text-center md:text-left ${
                       coins === opt ? 'text-black' : 'text-white'
                     }`}>
                       {opt.toLocaleString()}
@@ -297,20 +298,20 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
             </div>
 
             {/* Custom Input */}
-            <div className="w-full max-w-2xl mx-auto mb-6">
+            <div className="w-full max-w-2xl mx-auto mb-4 md:mb-6">
               <Input
                 type="number"
                 min="100"
                 value={coins}
                 onChange={(e) => handleCustomInput(e.target.value)}
-                className="w-full text-center text-3xl font-bold py-8 bg-card/20 border-2 border-primary/30 focus:border-primary text-white placeholder:text-muted-foreground backdrop-blur-sm rounded-2xl"
+                className="w-full text-center text-xl md:text-3xl font-bold py-4 md:py-8 bg-card/20 border-2 border-primary/30 focus:border-primary text-white placeholder:text-muted-foreground backdrop-blur-sm rounded-2xl"
                 placeholder="Enter coin amount"
               />
             </div>
 
             {/* Payment Display */}
-            <div className="text-center mb-6">
-              <p className="text-white text-2xl font-semibold">
+            <div className="text-center mb-4 md:mb-6">
+              <p className="text-white text-lg md:text-2xl font-semibold">
                 You will pay: <span className="text-primary">₹{priceINR}</span>
               </p>
             </div>
@@ -320,11 +321,11 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
               <Button
                 onClick={handlePayment}
                 disabled={!coins || coins < 100 || processing}
-                className="bg-gold-gradient hover:shadow-glow-gold text-primary-foreground font-bold py-4 px-12 text-xl rounded-2xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="bg-gold-gradient hover:shadow-glow-gold text-primary-foreground font-bold py-3 md:py-4 px-8 md:px-12 text-lg md:text-xl rounded-2xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 w-full max-w-xs active:scale-95"
               >
                 {processing ? (
                   <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 md:w-5 md:h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
                     <span>Processing...</span>
                   </div>
                 ) : (
