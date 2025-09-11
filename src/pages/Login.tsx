@@ -46,8 +46,11 @@ const Login = () => {
 
         {/* Hero Section */}
         <div className="text-center max-w-4xl mx-auto mb-12">
+          <div className="flex items-center justify-center mb-6">
+            <CoinFlip size="md" className="coin-glow" />
+          </div>
           <h2 className="text-3xl md:text-5xl font-bold text-foreground mb-4 leading-tight">
-            Play And Win Big
+            Play And Win Big 💰
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Flip the coin, test your luck, win real rewards. 
