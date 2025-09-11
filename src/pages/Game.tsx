@@ -117,6 +117,15 @@ const Game = () => {
             Start with 1000 free coins and play to win more!
           </p>
 
+          <Button 
+            variant="hero" 
+            size="lg"
+            className="px-12 py-4 text-xl font-bold mb-8 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            onClick={() => navigate('/coin-game')}
+          >
+            Play Now
+          </Button>
+
           <div className="glass-card p-8 rounded-2xl mb-8">
             <h2 className="text-2xl font-semibold text-foreground mb-4">What to Expect</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
@@ -150,15 +159,6 @@ const Game = () => {
               </div>
             </div>
           </div>
-
-            <Button 
-              variant="hero" 
-              size="lg"
-              className="px-8 py-3"
-              onClick={() => navigate('/coin-game')}
-            >
-              Play Now
-            </Button>
           </div>
 
           {/* Footer */}
