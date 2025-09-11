@@ -70,13 +70,12 @@ const CoinGame = () => {
     if (!currentRoundId) return;
 
     try {
-      const response = await fetch(`https://bozlxskkhdpbgwardifc.supabase.co/functions/v1/get-round-stats?roundId=${currentRoundId}`, {
-        method: 'GET',
+      const { data, error } = await supabase.functions.invoke('get-round-stats', {
+        body: { roundId: currentRoundId }
       });
-      
-      if (!response.ok) throw new Error('Failed to fetch stats');
-      
-      const data = await response.json();
+
+      if (error) throw error;
+
       setTotalPlayers(data.totalPlayers);
       setHeadsPercent(data.headsPercent);
       setTailsPercent(data.tailsPercent);
@@ -122,28 +121,16 @@ const CoinGame = () => {
 
     setIsPlacingBet(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('No session found');
-
-      const response = await fetch('https://bozlxskkhdpbgwardifc.supabase.co/functions/v1/place-bet', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('place-bet', {
+        body: {
           roundId: currentRoundId,
           betSide: selectedBetSide,
           betAmount: amount
-        }),
+        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to place bet');
-      }
+      if (error) throw error;
 
-      const data = await response.json();
       setUserBet(data.bet);
       setShowBettingPopup(false);
       toast({
@@ -169,20 +156,15 @@ const CoinGame = () => {
     if (!currentRoundId) return;
 
     try {
-      const response = await fetch('https://bozlxskkhdpbgwardifc.supabase.co/functions/v1/finalize-round', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('finalize-round', {
+        body: {
           roundId: currentRoundId,
           result: coinResult
-        }),
+        }
       });
 
-      if (!response.ok) throw new Error('Failed to finalize round');
+      if (error) throw error;
       
-      const data = await response.json();
       console.log('Round finalized:', data);
     } catch (error) {
       console.error('Error finalizing round:', error);

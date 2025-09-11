@@ -18,8 +18,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    const url = new URL(req.url);
-    const roundId = url.searchParams.get('roundId');
+    const { roundId } = await req.json();
 
     if (!roundId) {
       return new Response(JSON.stringify({ error: 'Round ID is required' }), {
