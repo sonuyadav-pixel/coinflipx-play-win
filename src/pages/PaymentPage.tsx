@@ -222,7 +222,9 @@ const PaymentPage = () => {
                       coins === opt ? 'text-black' : 'text-primary-foreground'
                     }`} />
                   </div>
-                  <div className="text-2xl font-bold text-white">
+                  <div className={`text-2xl font-bold ${
+                    coins === opt ? 'text-black' : 'text-white'
+                  }`}>
                     {opt.toLocaleString()}
                   </div>
                 </div>
