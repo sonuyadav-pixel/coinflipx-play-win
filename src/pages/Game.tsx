@@ -104,13 +104,18 @@ const Game = () => {
               </button>
             )}
             
-            <Button 
-              variant="glass" 
+            <button
               onClick={handleSignOut}
-              className="text-sm"
+              className="flex items-center gap-2 glass-card px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
             >
-              Sign Out
-            </Button>
+              <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-red-500"></div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Account</p>
+                <p className="text-sm font-medium text-foreground">Sign Out</p>
+              </div>
+            </button>
           </div>
         </header>
 
