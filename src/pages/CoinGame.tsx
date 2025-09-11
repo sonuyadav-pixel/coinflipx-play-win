@@ -38,6 +38,8 @@ const CoinGame = () => {
   const [showCoinHistory, setShowCoinHistory] = useState(false);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
 
+  console.log('CoinGame render:', { showCoinHistory, showBuyCoins });
+
   // Create new round when component mounts
   useEffect(() => {
     createNewRound();
@@ -363,8 +365,10 @@ const CoinGame = () => {
   };
 
   const handleAddCoins = () => {
+    console.log('Add coins clicked');
     setShowCoinHistory(false);
     setShowBuyCoins(true);
+    console.log('Buy coins modal should open now');
   };
 
   return (

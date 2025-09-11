@@ -19,6 +19,8 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
   const [showQR, setShowQR] = useState(false);
   const [processing, setProcessing] = useState(false);
 
+  console.log('BuyCoinsModal render:', { isOpen, showQR, processing });
+
   const rate = 100; // 1 INR = 100 coins
   const priceINR = coins / rate;
   const presetOptions = [100, 500, 1000, 2000, 5000, 10000];
