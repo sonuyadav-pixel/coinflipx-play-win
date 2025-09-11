@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import CoinFlip from '@/components/CoinFlip';
 import LoginModal from '@/components/LoginModal';
