@@ -68,18 +68,20 @@ const handler = async (req: Request): Promise<Response> => {
       email_confirm: true,
     });
 
-    if (userError && userError.message.includes("already registered")) {
-      // User already exists, that's fine - we'll generate a session for them
-      console.log(`User ${email} already exists, proceeding with session generation`);
-    } else if (userError) {
-      console.error("Error creating user:", userError);
-      return new Response(
-        JSON.stringify({ error: "Failed to create user" }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
+    if (userError) {
+      if (userError.message.includes("already registered")) {
+        // User already exists, that's fine - we'll generate a session for them
+        console.log(`User ${email} already exists, proceeding with session generation`);
+      } else {
+        console.error("Error creating user:", userError);
+        return new Response(
+          JSON.stringify({ error: "Failed to create user" }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
     } else {
       userData = createData;
     }
