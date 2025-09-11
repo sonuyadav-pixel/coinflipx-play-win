@@ -56,8 +56,18 @@ const Game = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    try {
+      const { error } = await signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+        // Even if there's an error, redirect to login
+      }
+      navigate('/');
+    } catch (error) {
+      console.error('Unexpected sign out error:', error);
+      // Force navigation even on error
+      navigate('/');
+    }
   };
 
   // Loading and authentication checks are now handled by AuthGuard
