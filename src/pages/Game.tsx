@@ -104,9 +104,6 @@ const Game = () => {
               </button>
             )}
             
-            <span className="text-sm text-muted-foreground">
-              Welcome, {user.email}
-            </span>
             <Button 
               variant="glass" 
               onClick={handleSignOut}
