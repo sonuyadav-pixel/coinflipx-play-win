@@ -13,9 +13,10 @@ serve(async (req) => {
   }
 
   try {
+    // Use service role key for admin operations
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     const { roundId, result } = await req.json();
@@ -48,7 +49,7 @@ serve(async (req) => {
     const { error: betsUpdateError } = await supabase
       .from('bets')
       .update({
-        is_winner: supabase.raw(`bet_side = '${result}'`)
+        is_winner: supabase.raw(`CASE WHEN bet_side = '${result}' THEN true ELSE false END`)
       })
       .eq('round_id', roundId);
 
