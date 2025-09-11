@@ -13,6 +13,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('finalize-round function called with:', { roundId, result });
+    
     // Use service role key for admin operations
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -22,11 +24,14 @@ serve(async (req) => {
     const { roundId, result } = await req.json();
 
     if (!roundId || !result || !['Heads', 'Tails'].includes(result)) {
+      console.error('Invalid parameters:', { roundId, result });
       return new Response(JSON.stringify({ error: 'Invalid roundId or result' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    console.log('Updating round with result:', result);
 
     // Update the round with the result
     const { error: roundUpdateError } = await supabase
@@ -45,40 +50,28 @@ serve(async (req) => {
       });
     }
 
-    // Update all bets for this round to mark winners and losers
-    // First, mark all as losers
-    const { error: losersUpdateError } = await supabase
-      .from('bets')
-      .update({ is_winner: false })
-      .eq('round_id', roundId);
+    console.log('Processing coin winnings...');
+    
+    // Process coin winnings using the database function
+    const { data: winningsData, error: winningsError } = await supabase.rpc('process_coin_winnings', {
+      _round_id: roundId,
+      _result: result
+    });
 
-    if (losersUpdateError) {
-      console.error('Error updating losers:', losersUpdateError);
-      return new Response(JSON.stringify({ error: 'Failed to update betting results' }), {
+    if (winningsError) {
+      console.error('Error processing coin winnings:', winningsError);
+      return new Response(JSON.stringify({ error: 'Failed to process coin winnings' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Then mark winners
-    const { error: winnersUpdateError } = await supabase
-      .from('bets')
-      .update({ is_winner: true })
-      .eq('round_id', roundId)
-      .eq('bet_side', result);
-
-    if (winnersUpdateError) {
-      console.error('Error updating winners:', winnersUpdateError);
-      return new Response(JSON.stringify({ error: 'Failed to update betting results' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    console.log('Coin winnings processed:', winningsData);
 
     // Get the updated statistics
     const { data: bets, error: betsError } = await supabase
       .from('bets')
-      .select('bet_side, bet_amount, is_winner')
+      .select('bet_side, bet_amount, is_winner, coin_amount, coin_winnings')
       .eq('round_id', roundId);
 
     if (betsError) {
@@ -87,13 +80,23 @@ serve(async (req) => {
 
     const winners = bets?.filter(bet => bet.is_winner) || [];
     const totalWinningAmount = winners.reduce((sum, bet) => sum + parseFloat(bet.bet_amount), 0);
+    const totalCoinWinnings = winners.reduce((sum, bet) => sum + parseFloat(bet.coin_winnings || 0), 0);
+
+    console.log('Round finalized successfully:', {
+      totalBets: bets?.length || 0,
+      winners: winners.length,
+      totalWinningAmount,
+      totalCoinWinnings
+    });
 
     return new Response(JSON.stringify({ 
       success: true,
       result: result,
       totalBets: bets?.length || 0,
       winners: winners.length,
-      totalWinningAmount: totalWinningAmount
+      totalWinningAmount: totalWinningAmount,
+      totalCoinWinnings: totalCoinWinnings,
+      winningsProcessed: winningsData
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

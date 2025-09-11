@@ -263,6 +263,8 @@ const CoinGame = () => {
     if (!currentRoundId) return;
 
     try {
+      console.log('Finalizing coin flip with result:', coinResult);
+      
       const { data, error } = await supabase.functions.invoke('finalize-round', {
         body: {
           roundId: currentRoundId,
@@ -270,15 +272,21 @@ const CoinGame = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error finalizing round:', error);
+        throw error;
+      }
       
-      // Process coin winnings
-      await supabase.rpc('process_coin_winnings', {
-        _round_id: currentRoundId,
-        _result: coinResult
-      });
+      console.log('Round finalized successfully:', data);
       
-      console.log('Round finalized:', data);
+      // Refresh coin balance after winnings are processed
+      if (userWon) {
+        console.log('User won, refreshing coin balance...');
+        setTimeout(() => {
+          refreshCoins();
+        }, 500); // Give a bit more time for DB updates
+      }
+      
     } catch (error) {
       console.error('Error finalizing round:', error);
     }
