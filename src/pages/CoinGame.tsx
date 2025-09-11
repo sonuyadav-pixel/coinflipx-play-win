@@ -272,39 +272,77 @@ const CoinGame = () => {
               {timeLeft > 0 ? "Betting Phase" : "Coin Flipping"}
             </h1>
 
-            {/* Timer with circular progress */}
-            <div className="relative w-40 h-40 flex items-center justify-center mb-8 mx-auto">
-              <svg className="absolute top-0 left-0 w-full h-full -rotate-90">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke="hsl(var(--muted))"
-                  strokeWidth="8"
-                  fill="none"
-                />
-                <motion.circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  stroke={timeLeft <= 10 ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
-                  strokeWidth="8"
-                  fill="none"
-                  strokeDasharray={2 * Math.PI * 70}
-                  strokeDashoffset={(1 - progress / 100) * 2 * Math.PI * 70}
-                  initial={false}
-                  animate={{ strokeDashoffset: (1 - progress / 100) * 2 * Math.PI * 70 }}
-                  transition={{ duration: 1, ease: "linear" }}
-                />
-              </svg>
-              <div
-                className={`font-mono font-bold transition-all duration-300 ${
-                  timeLeft <= 10 ? "text-destructive text-6xl animate-pulse glow-red" : "text-primary text-4xl"
-                }`}
-              >
-                {timeLeft}s
+            {/* Timer with circular progress - only show during betting */}
+            {timeLeft > 0 && (
+              <div className="relative w-40 h-40 flex items-center justify-center mb-8 mx-auto">
+                <svg className="absolute top-0 left-0 w-full h-full -rotate-90">
+                  <circle
+                    cx="80"
+                    cy="80"
+                    r="70"
+                    stroke="hsl(var(--muted))"
+                    strokeWidth="8"
+                    fill="none"
+                  />
+                  <motion.circle
+                    cx="80"
+                    cy="80"
+                    r="70"
+                    stroke={timeLeft <= 10 ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+                    strokeWidth="8"
+                    fill="none"
+                    strokeDasharray={2 * Math.PI * 70}
+                    strokeDashoffset={(1 - progress / 100) * 2 * Math.PI * 70}
+                    initial={false}
+                    animate={{ strokeDashoffset: (1 - progress / 100) * 2 * Math.PI * 70 }}
+                    transition={{ duration: 1, ease: "linear" }}
+                  />
+                </svg>
+                <div
+                  className={`font-mono font-bold transition-all duration-300 ${
+                    timeLeft <= 10 ? "text-destructive text-6xl animate-pulse glow-red" : "text-primary text-4xl"
+                  }`}
+                >
+                  {timeLeft}s
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Coin Flip Animation during flipping phase */}
+            {timeLeft <= 0 && !showPopup && (
+              <div className="flex flex-col items-center mb-8">
+                <motion.div
+                  className="relative w-40 h-40"
+                  animate={{ rotateY: 1800, scale: [1, 1.3, 1.6, 1] }}
+                  transition={{ duration: 3, ease: "easeInOut", repeat: Infinity }}
+                  style={{ transformStyle: "preserve-3d" }}
+                >
+                  {/* HEADS Face */}
+                  <div
+                    className="absolute w-40 h-40 rounded-full shadow-2xl border-4 border-yellow-500 flex items-center justify-center"
+                    style={{
+                      background: "radial-gradient(circle, #FFD700 10%, #DAA520 80%)",
+                      backfaceVisibility: "hidden",
+                    }}
+                  >
+                    <span className="text-2xl font-bold text-yellow-900">HEADS</span>
+                  </div>
+
+                  {/* TAILS Face */}
+                  <div
+                    className="absolute w-40 h-40 rounded-full shadow-2xl border-4 border-yellow-500 flex items-center justify-center"
+                    style={{
+                      background: "radial-gradient(circle, #FFD700 10%, #DAA520 80%)",
+                      transform: "rotateY(180deg)",
+                      backfaceVisibility: "hidden",
+                    }}
+                  >
+                    <span className="text-2xl font-bold text-yellow-900">TAILS</span>
+                  </div>
+                </motion.div>
+                <p className="mt-4 text-lg text-muted-foreground">Flipping coin...</p>
+              </div>
+            )}
 
             {/* Coin Flip Video Animation */}
             <AnimatePresence>
