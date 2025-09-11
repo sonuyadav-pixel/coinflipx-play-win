@@ -21,6 +21,7 @@ const CoinGame = () => {
   const [headsPercent, setHeadsPercent] = useState(50);
   const [tailsPercent, setTailsPercent] = useState(50);
   const [totalPlayers, setTotalPlayers] = useState(0);
+  const [recentResults, setRecentResults] = useState<string[]>([]);
   const [popupTimer, setPopupTimer] = useState(10);
   const [currentRoundId, setCurrentRoundId] = useState<string | null>(null);
   const [userBet, setUserBet] = useState<any>(null);
@@ -33,11 +34,13 @@ const CoinGame = () => {
     createNewRound();
   }, []);
 
-  // Update round stats periodically
+  // Update round stats and historical data periodically
   useEffect(() => {
     if (currentRoundId && phase === "bet") {
       const interval = setInterval(() => {
         fetchRoundStats();
+        fetchHistoricalStats();
+        fetchRecentResults();
       }, 2000);
       return () => clearInterval(interval);
     }
@@ -63,6 +66,10 @@ const CoinGame = () => {
       setMaxTime(60);
       setPhase("bet");
       setUserBet(null);
+      
+      // Fetch initial historical data
+      fetchHistoricalStats();
+      fetchRecentResults();
       
       console.log('New round created with ID:', data.round.id);
     } catch (error) {
@@ -93,10 +100,47 @@ const CoinGame = () => {
       }
 
       setTotalPlayers(data.totalPlayers);
+    } catch (error) {
+      console.error('Error fetching round stats:', error);
+    }
+  };
+
+  const fetchHistoricalStats = async () => {
+    try {
+      console.log('Fetching historical stats...');
+      
+      const { data, error } = await supabase.functions.invoke('get-historical-stats');
+
+      console.log('Historical stats response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
       setHeadsPercent(data.headsPercent);
       setTailsPercent(data.tailsPercent);
     } catch (error) {
-      console.error('Error fetching round stats:', error);
+      console.error('Error fetching historical stats:', error);
+    }
+  };
+
+  const fetchRecentResults = async () => {
+    try {
+      console.log('Fetching recent results...');
+      
+      const { data, error } = await supabase.functions.invoke('get-recent-results');
+
+      console.log('Recent results response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
+
+      setRecentResults(data.recentResults || []);
+    } catch (error) {
+      console.error('Error fetching recent results:', error);
     }
   };
 
@@ -351,27 +395,54 @@ const CoinGame = () => {
                   Total Players Betting: {totalPlayers.toLocaleString()}
                 </p>
 
-                {/* Live Betting Bar */}
-                <div className="w-full glass-card rounded-full h-8 overflow-hidden flex">
-                  <motion.div
-                    className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-8 text-black font-bold flex items-center justify-center text-sm"
-                    style={{ width: `${headsPercent}%` }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${headsPercent}%` }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {headsPercent}% Heads
-                  </motion.div>
-                  <motion.div
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-8 text-white font-bold flex items-center justify-center text-sm"
-                    style={{ width: `${tailsPercent}%` }}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${tailsPercent}%` }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {tailsPercent}% Tails
-                  </motion.div>
+                {/* Recent Results */}
+                {recentResults.length > 0 && (
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-sm text-muted-foreground">Last 5 Results:</p>
+                    <div className="flex gap-2">
+                      {recentResults.map((result, index) => (
+                        <div
+                          key={index}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                            result === 'Heads' 
+                              ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-black' 
+                              : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
+                          }`}
+                        >
+                          {result === 'Heads' ? 'H' : 'T'}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Historical Percentage Bar */}
+                <div className="w-full flex flex-col gap-2">
+                  <p className="text-sm text-muted-foreground text-center">
+                    Last 10 Results: {headsPercent}% Heads, {tailsPercent}% Tails
+                  </p>
+                  <div className="w-full glass-card rounded-full h-8 overflow-hidden flex">
+                    <motion.div
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-8 text-black font-bold flex items-center justify-center text-sm"
+                      style={{ width: `${headsPercent}%` }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${headsPercent}%` }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {headsPercent}% Heads
+                    </motion.div>
+                    <motion.div
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-8 text-white font-bold flex items-center justify-center text-sm"
+                      style={{ width: `${tailsPercent}%` }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${tailsPercent}%` }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {tailsPercent}% Tails
+                    </motion.div>
+                  </div>
                 </div>
+
 
                 {/* Betting Buttons */}
                 <div className="flex gap-6">
