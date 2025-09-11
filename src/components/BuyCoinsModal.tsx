@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import CoinFlip from "@/components/CoinFlip";
 
 interface BuyCoinsModalProps {
   isOpen: boolean;
@@ -210,9 +211,12 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
         <div className="p-6">
           {/* Brand Header */}
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold text-white mb-1">
-              COINFLIP<span className="text-primary">X</span>
-            </h1>
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <CoinFlip size="md" />
+              <h1 className="text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent">
+                CoinFlipX
+              </h1>
+            </div>
             <p className="text-primary text-lg font-semibold tracking-wider">PLAY & WIN BIG</p>
           </div>
 
