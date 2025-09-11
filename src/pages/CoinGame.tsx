@@ -415,7 +415,9 @@ const CoinGame = () => {
             {/* Betting Phase */}
             {!showPopup && !flipping && (
               <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto">
-                <p className="text-xl text-foreground">Place your bets!</p>
+                {!userBet && (
+                  <p className="text-xl text-foreground">Place your bets!</p>
+                )}
                 <p className="text-sm text-muted-foreground">
                   Players Active (Last Hour): {totalPlayers.toLocaleString()}
                 </p>
