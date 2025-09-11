@@ -49,14 +49,23 @@ export const useAuth = () => {
       if (error) throw error;
       
       // If verification successful, sign in with magic link
-      if (data.success && data.session) {
-        const { data: authData, error: authError } = await supabase.auth.verifyOtp({
-          email,
-          token: data.session.properties.access_token,
-          type: 'email'
+      if (data.success) {
+        const { error: signInError } = await supabase.auth.signInWithOtp({
+          email: data.email,
+          options: {
+            shouldCreateUser: true,
+            emailRedirectTo: `${window.location.origin}/game`
+          }
         });
         
-        return { data: authData, error: authError };
+        if (signInError) throw signInError;
+        
+        return { 
+          data: { 
+            message: "Verification successful! Please check your email for the sign-in link." 
+          }, 
+          error: null 
+        };
       }
       
       return { data, error: null };

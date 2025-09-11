@@ -55,49 +55,8 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Create or get user - handle existing users gracefully
-    let userData = null;
-    const { data: createData, error: userError } = await supabase.auth.admin.createUser({
-      email,
-      email_confirm: true,
-    });
-
-    if (userError) {
-      if (userError.message.includes("already registered")) {
-        // User already exists, that's fine - we'll generate a session for them
-        console.log(`User ${email} already exists, proceeding with session generation`);
-      } else {
-        console.error("Error creating user:", userError);
-        return new Response(
-          JSON.stringify({ error: "Failed to create user" }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-    } else {
-      userData = createData;
-    }
-
-    // Generate session for the user
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email,
-    });
-
-    if (sessionError) {
-      console.error("Error generating session:", sessionError);
-      return new Response(
-        JSON.stringify({ error: "Failed to generate session" }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    // Only delete the verification code after successful authentication
+    // Code is valid - return success and let frontend handle sign-in
+    // Delete the verification code
     await supabase
       .from('verification_codes')
       .delete()
@@ -109,7 +68,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ 
         success: true, 
         message: "Email verified successfully",
-        session: sessionData
+        email: email
       }),
       {
         status: 200,
