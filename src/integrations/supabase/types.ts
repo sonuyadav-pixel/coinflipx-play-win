@@ -61,11 +61,48 @@ export type Database = {
           },
         ]
       }
+      payment_transactions: {
+        Row: {
+          amount_inr: number
+          coins_purchased: number
+          created_at: string
+          id: string
+          payment_method: string | null
+          status: string | null
+          transaction_ref: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_inr: number
+          coins_purchased: number
+          created_at?: string
+          id?: string
+          payment_method?: string | null
+          status?: string | null
+          transaction_ref?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_inr?: number
+          coins_purchased?: number
+          created_at?: string
+          id?: string
+          payment_method?: string | null
+          status?: string | null
+          transaction_ref?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          email: string | null
           id: string
           updated_at: string
           user_id: string
@@ -74,6 +111,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
           updated_at?: string
           user_id: string
@@ -82,6 +120,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          email?: string | null
           id?: string
           updated_at?: string
           user_id?: string
@@ -174,6 +213,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_add_coins: {
+        Args: { _coin_amount: number; _user_email: string }
+        Returns: Json
+      }
       initialize_user_coins: {
         Args: { _user_id: string }
         Returns: {

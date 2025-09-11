@@ -136,7 +136,11 @@ const CoinHistoryModal: React.FC<CoinHistoryModalProps> = ({
         {/* Add Coins Button */}
         <div className="mb-6">
           <Button
-            onClick={onAddCoins}
+            onClick={() => {
+              onClose();
+              // Navigate to payment page
+              window.location.href = '/payment';
+            }}
             variant="hero"
             className="w-full"
           >

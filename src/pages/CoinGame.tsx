@@ -361,9 +361,8 @@ const CoinGame = () => {
   };
 
   const handleAddCoins = () => {
-    // TODO: Implement add coins functionality
-    console.log('Add coins clicked');
     setShowCoinHistory(false);
+    navigate('/payment');
   };
 
   return (
