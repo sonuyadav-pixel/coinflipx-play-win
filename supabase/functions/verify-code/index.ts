@@ -55,12 +55,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Code is valid, delete it from database
-    await supabase
-      .from('verification_codes')
-      .delete()
-      .eq('email', email);
-
     // Create or get user - handle existing users gracefully
     let userData = null;
     const { data: createData, error: userError } = await supabase.auth.admin.createUser({
@@ -102,6 +96,12 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
+    // Only delete the verification code after successful authentication
+    await supabase
+      .from('verification_codes')
+      .delete()
+      .eq('email', email);
 
     console.log(`Verification successful for ${email}`);
 
