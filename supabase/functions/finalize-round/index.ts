@@ -45,16 +45,30 @@ serve(async (req) => {
       });
     }
 
-    // Update all bets for this round to mark winners
-    const { error: betsUpdateError } = await supabase
+    // Update all bets for this round to mark winners and losers
+    // First, mark all as losers
+    const { error: losersUpdateError } = await supabase
       .from('bets')
-      .update({
-        is_winner: supabase.raw(`CASE WHEN bet_side = '${result}' THEN true ELSE false END`)
-      })
+      .update({ is_winner: false })
       .eq('round_id', roundId);
 
-    if (betsUpdateError) {
-      console.error('Error updating bets:', betsUpdateError);
+    if (losersUpdateError) {
+      console.error('Error updating losers:', losersUpdateError);
+      return new Response(JSON.stringify({ error: 'Failed to update betting results' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Then mark winners
+    const { error: winnersUpdateError } = await supabase
+      .from('bets')
+      .update({ is_winner: true })
+      .eq('round_id', roundId)
+      .eq('bet_side', result);
+
+    if (winnersUpdateError) {
+      console.error('Error updating winners:', winnersUpdateError);
       return new Response(JSON.stringify({ error: 'Failed to update betting results' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
