@@ -5,6 +5,7 @@ import LoginModal from '@/components/LoginModal';
 import CoinHistoryModal from '@/components/CoinHistoryModal';
 import BuyCoinsModal from '@/components/BuyCoinsModal';
 import { useAuth } from '@/hooks/useAuth';
+import { useRealtimeCoins } from '@/hooks/useRealtimeCoins';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Coins } from 'lucide-react';
@@ -12,10 +13,10 @@ import goldSparkle from '@/assets/gold-sparkle.png';
 
 const Game = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [userCoins, setUserCoins] = useState<any>(null);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
   const { user, loading, signOut } = useAuth();
+  const { userCoins } = useRealtimeCoins(); // Use real-time coin updates
   const navigate = useNavigate();
 
   // Redirect unauthenticated users to home page
@@ -24,33 +25,6 @@ const Game = () => {
       navigate('/');
     }
   }, [user, loading, navigate]);
-
-  useEffect(() => {
-    if (user) {
-      fetchUserCoins();
-    }
-  }, [user]);
-
-  const fetchUserCoins = async () => {
-    if (!user) return;
-
-    try {
-      console.log('Fetching user coins...');
-      
-      const { data, error } = await supabase.functions.invoke('get-user-coins');
-
-      console.log('User coins response:', { data, error });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        return;
-      }
-
-      setUserCoins(data.coins);
-    } catch (error) {
-      console.error('Error fetching user coins:', error);
-    }
-  };
 
   const handleAddCoins = () => {
     console.log('Add coins clicked');

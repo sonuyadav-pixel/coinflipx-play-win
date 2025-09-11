@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import CoinFlip from "@/components/CoinFlip";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeCoins } from '@/hooks/useRealtimeCoins';
 import { toast } from "@/hooks/use-toast";
 import BettingPopup from "@/components/BettingPopup";
 import CoinHistoryModal from "@/components/CoinHistoryModal";
@@ -15,6 +16,7 @@ import Confetti from "react-confetti";
 const CoinGame = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { userCoins } = useRealtimeCoins(); // Use real-time coin updates
   const [phase, setPhase] = useState("bet");
   const [timeLeft, setTimeLeft] = useState(60);
   const [result, setResult] = useState<string | null>(null);
@@ -34,7 +36,6 @@ const CoinGame = () => {
   const [userWon, setUserWon] = useState<boolean | null>(null);
   const [winAmount, setWinAmount] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [userCoins, setUserCoins] = useState<any>(null);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
 
@@ -43,9 +44,6 @@ const CoinGame = () => {
   // Create new round when component mounts
   useEffect(() => {
     createNewRound();
-    if (user) {
-      fetchUserCoins();
-    }
   }, [user]);
 
   // Update round stats and historical data periodically
@@ -55,9 +53,6 @@ const CoinGame = () => {
       fetchRoundStats();
       fetchHistoricalStats();
       fetchRecentResults();
-      if (user) {
-        fetchUserCoins();
-      }
       }, 2000);
       return () => clearInterval(interval);
     }
@@ -96,27 +91,6 @@ const CoinGame = () => {
         description: "Failed to create new round",
         variant: "destructive"
       });
-    }
-  };
-
-  const fetchUserCoins = async () => {
-    if (!user) return;
-
-    try {
-      console.log('Fetching user coins...');
-      
-      const { data, error } = await supabase.functions.invoke('get-user-coins');
-
-      console.log('User coins response:', { data, error });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        return;
-      }
-
-      setUserCoins(data.coins);
-    } catch (error) {
-      console.error('Error fetching user coins:', error);
     }
   };
 
@@ -246,8 +220,7 @@ const CoinGame = () => {
       setUserBet(data.bet);
       setShowBettingPopup(false);
       
-      // Refresh user coins and stats
-      fetchUserCoins();
+      // Refresh round stats
       fetchRoundStats();
       
       toast({
@@ -320,13 +293,6 @@ const CoinGame = () => {
         setShowPopup(true);
         setPopupTimer(30);
         finalizeCoinFlip(coin);
-        
-        // Refresh user coins after result
-        setTimeout(() => {
-          if (user) {
-            fetchUserCoins();
-          }
-        }, 1000);
       }, 7000); // Video duration
     } else {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);

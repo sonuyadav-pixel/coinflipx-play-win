@@ -4,6 +4,7 @@ import { X, TrendingUp, TrendingDown, Gift, Coins, Clock, CheckCircle, RefreshCw
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRealtimeCoins } from '@/hooks/useRealtimeCoins';
 
 interface Transaction {
   id: string;
@@ -22,19 +23,23 @@ interface Transaction {
 interface CoinHistoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userCoins: any;
+  userCoins?: any; // Made optional since we can use real-time hook
   onAddCoins: () => void;
 }
 
 const CoinHistoryModal: React.FC<CoinHistoryModalProps> = ({
   isOpen,
   onClose,
-  userCoins,
+  userCoins: propUserCoins, // Rename to avoid conflict
   onAddCoins
 }) => {
   const { user } = useAuth();
+  const { userCoins: realtimeUserCoins } = useRealtimeCoins(); // Use real-time hook
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
+  
+  // Use prop userCoins if provided, otherwise use real-time hook
+  const userCoins = propUserCoins || realtimeUserCoins;
 
   useEffect(() => {
     if (isOpen && user) {
