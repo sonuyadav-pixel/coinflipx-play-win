@@ -45,17 +45,26 @@ const CoinGame = () => {
 
   const createNewRound = async () => {
     try {
+      console.log('Creating new round...');
+      
       const { data, error } = await supabase.functions.invoke('create-round', {
         body: { bettingDurationSeconds: 60 }
       });
 
-      if (error) throw error;
+      console.log('Create round response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
       setCurrentRoundId(data.round.id);
       setTimeLeft(60);
       setMaxTime(60);
       setPhase("bet");
       setUserBet(null);
+      
+      console.log('New round created with ID:', data.round.id);
     } catch (error) {
       console.error('Error creating round:', error);
       toast({
@@ -70,11 +79,18 @@ const CoinGame = () => {
     if (!currentRoundId) return;
 
     try {
+      console.log('Fetching round stats for round:', currentRoundId);
+      
       const { data, error } = await supabase.functions.invoke('get-round-stats', {
         body: { roundId: currentRoundId }
       });
 
-      if (error) throw error;
+      console.log('Round stats response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
       setTotalPlayers(data.totalPlayers);
       setHeadsPercent(data.headsPercent);
@@ -121,6 +137,8 @@ const CoinGame = () => {
 
     setIsPlacingBet(true);
     try {
+      console.log('Placing bet:', { roundId: currentRoundId, betSide: selectedBetSide, betAmount: amount });
+      
       const { data, error } = await supabase.functions.invoke('place-bet', {
         body: {
           roundId: currentRoundId,
@@ -129,7 +147,12 @@ const CoinGame = () => {
         }
       });
 
-      if (error) throw error;
+      console.log('Place bet response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
+      }
 
       setUserBet(data.bet);
       setShowBettingPopup(false);

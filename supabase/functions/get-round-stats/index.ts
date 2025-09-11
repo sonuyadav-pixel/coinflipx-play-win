@@ -7,6 +7,8 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log('get-round-stats function called');
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -18,15 +20,43 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    const { roundId } = await req.json();
+    let roundId;
+    
+    try {
+      const body = await req.text();
+      console.log('Request body:', body);
+      
+      if (body) {
+        const parsed = JSON.parse(body);
+        roundId = parsed.roundId;
+      }
+    } catch (parseError) {
+      console.log('Error parsing body, trying query params:', parseError);
+      // Fallback to query params
+      const url = new URL(req.url);
+      roundId = url.searchParams.get('roundId');
+    }
+    
+    console.log('Round ID:', roundId);
 
     if (!roundId) {
-      return new Response(JSON.stringify({ error: 'Round ID is required' }), {
-        status: 400,
+      console.log('No round ID provided, returning default stats');
+      // Return default stats if no round ID
+      return new Response(JSON.stringify({
+        totalPlayers: 0,
+        headsCount: 0,
+        tailsCount: 0,
+        headsPercent: 50,
+        tailsPercent: 50,
+        headsAmount: 0,
+        tailsAmount: 0
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
+    console.log('Fetching bets for round:', roundId);
+    
     // Get betting statistics for the round
     const { data: bets, error: betsError } = await supabase
       .from('bets')
@@ -41,6 +71,8 @@ serve(async (req) => {
       });
     }
 
+    console.log('Bets found:', bets?.length || 0);
+
     const totalPlayers = bets?.length || 0;
     const headsCount = bets?.filter(bet => bet.bet_side === 'Heads').length || 0;
     const tailsCount = bets?.filter(bet => bet.bet_side === 'Tails').length || 0;
@@ -51,7 +83,7 @@ serve(async (req) => {
     const headsAmount = bets?.filter(bet => bet.bet_side === 'Heads').reduce((sum, bet) => sum + parseFloat(bet.bet_amount), 0) || 0;
     const tailsAmount = bets?.filter(bet => bet.bet_side === 'Tails').reduce((sum, bet) => sum + parseFloat(bet.bet_amount), 0) || 0;
 
-    return new Response(JSON.stringify({
+    const result = {
       totalPlayers,
       headsCount,
       tailsCount,
@@ -59,7 +91,11 @@ serve(async (req) => {
       tailsPercent,
       headsAmount,
       tailsAmount
-    }), {
+    };
+    
+    console.log('Returning stats:', result);
+
+    return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
