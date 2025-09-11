@@ -317,7 +317,7 @@ const CoinGame = () => {
                   loop
                   className="w-64 h-64 rounded-full object-cover"
                 >
-                  <source src="/src/assets/coin-flip-animation.mp4" type="video/mp4" />
+                  <source src="/coin-flip-animation.mp4" type="video/mp4" />
                 </video>
                 <p className="mt-4 text-lg text-muted-foreground">Flipping coin...</p>
               </div>
