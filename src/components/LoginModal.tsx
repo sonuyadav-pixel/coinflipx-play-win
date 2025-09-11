@@ -205,21 +205,15 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           <Button 
             variant="glass" 
             size="lg" 
-            className="w-full justify-start" 
-            onClick={handleGoogleSignIn}
-            disabled={loading}
+            className="w-full justify-start opacity-50" 
+            disabled
           >
             <Chrome size={18} />
-            {isSignUp ? 'Sign Up with Google' : 'Continue with Google'}
+            Google OAuth (Setup Required)
           </Button>
-          <Button variant="glass" size="lg" className="w-full justify-start opacity-50" disabled>
-            <Facebook size={18} />
-            Continue with Facebook
-          </Button>
-          <Button variant="glass" size="lg" className="w-full justify-start opacity-50" disabled>
-            <Apple size={18} />
-            Continue with Apple
-          </Button>
+          <div className="text-xs text-muted-foreground text-center">
+            Configure Google OAuth in Supabase to enable Google sign-in
+          </div>
         </div>
 
         {/* Footer */}
