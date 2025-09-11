@@ -2,12 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import CoinFlip from '@/components/CoinFlip';
 import LoginModal from '@/components/LoginModal';
+import CoinHistoryModal from '@/components/CoinHistoryModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Coins } from 'lucide-react';
 import goldSparkle from '@/assets/gold-sparkle.png';
 
 const Game = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userCoins, setUserCoins] = useState<any>(null);
+  const [showCoinHistory, setShowCoinHistory] = useState(false);
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -17,6 +22,39 @@ const Game = () => {
       navigate('/');
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserCoins();
+    }
+  }, [user]);
+
+  const fetchUserCoins = async () => {
+    if (!user) return;
+
+    try {
+      console.log('Fetching user coins...');
+      
+      const { data, error } = await supabase.functions.invoke('get-user-coins');
+
+      console.log('User coins response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        return;
+      }
+
+      setUserCoins(data.coins);
+    } catch (error) {
+      console.error('Error fetching user coins:', error);
+    }
+  };
+
+  const handleAddCoins = () => {
+    // TODO: Implement add coins functionality
+    console.log('Add coins clicked');
+    setShowCoinHistory(false);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -50,7 +88,22 @@ const Game = () => {
               CoinFlipX
             </h1>
           </div>
+          
           <div className="flex items-center gap-4">
+            {/* User Coin Balance - Clickable */}
+            {userCoins && (
+              <button
+                onClick={() => setShowCoinHistory(true)}
+                className="flex items-center gap-2 glass-card px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <Coins className="w-5 h-5 text-primary" />
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Your Coins</p>
+                  <p className="text-lg font-bold text-primary">{Math.floor(userCoins.balance).toLocaleString()}</p>
+                </div>
+              </button>
+            )}
+            
             <span className="text-sm text-muted-foreground">
               Welcome, {user.email}
             </span>
@@ -75,14 +128,14 @@ const Game = () => {
           
           <div className="flex items-center justify-center gap-3 mb-6">
             <h1 className="text-4xl md:text-6xl font-bold bg-gold-gradient bg-clip-text text-transparent">
-              Play and win Money
+              Play and win Coins
             </h1>
             <img src={goldSparkle} alt="Gold sparkle" className="w-12 h-12 md:w-16 md:h-16 animate-pulse" />
           </div>
           
           <p className="text-lg md:text-xl text-muted-foreground mb-8">
-            The ultimate coin flipping experience is being crafted. 
-            Get ready for the most thrilling gaming adventure!
+            The ultimate coin flipping experience is here! 
+            Start with 1000 free coins and play to win more!
           </p>
 
           <div className="glass-card p-8 rounded-2xl mb-8">
@@ -96,17 +149,17 @@ const Game = () => {
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-primary">🏆</span>
+                <span className="text-primary">🪙</span>
                 <div>
-                  <h3 className="font-medium text-foreground">Tournaments</h3>
-                  <p className="text-sm text-muted-foreground">Compete with players worldwide</p>
+                  <h3 className="font-medium text-foreground">Virtual Coins</h3>
+                  <p className="text-sm text-muted-foreground">Play with virtual coins - no real money</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
                 <span className="text-primary">💎</span>
                 <div>
-                  <h3 className="font-medium text-foreground">Premium Rewards</h3>
-                  <p className="text-sm text-muted-foreground">Exclusive prizes and bonuses</p>
+                  <h3 className="font-medium text-foreground">2X Winnings</h3>
+                  <p className="text-sm text-muted-foreground">Double your coins when you win</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -132,11 +185,19 @@ const Game = () => {
           {/* Footer */}
           <div className="mt-8">
             <p className="text-sm text-muted-foreground text-center">
-              18+ Only | Play Responsibly | Licensed Gaming Platform
+              18+ Only | Play Responsibly | Virtual Coins Only
             </p>
           </div>
         </div>
       </div>
+
+      {/* Coin History Modal */}
+      <CoinHistoryModal
+        isOpen={showCoinHistory}
+        onClose={() => setShowCoinHistory(false)}
+        userCoins={userCoins}
+        onAddCoins={handleAddCoins}
+      />
 
       {/* Login Modal */}
       <LoginModal 
