@@ -269,7 +269,7 @@ const CoinGame = () => {
             
             {/* Phase Title */}
             <h1 className="text-3xl md:text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-8">
-              Betting Phase
+              {timeLeft > 0 ? "Betting Phase" : "Coin Flipping"}
             </h1>
 
             {/* Timer with circular progress */}
