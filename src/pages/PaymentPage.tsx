@@ -209,14 +209,18 @@ const PaymentPage = () => {
                 key={opt}
                 className={`relative cursor-pointer transition-all duration-300 hover:scale-105 p-4 ${
                   coins === opt 
-                    ? 'bg-card/30 border-2 border-secondary shadow-glow-blue' 
+                    ? 'bg-gold-gradient border-2 border-primary shadow-glow-gold' 
                     : 'bg-card/20 border-2 border-primary/30 hover:border-primary/50'
                 } backdrop-blur-sm`}
                 onClick={() => setCoins(opt)}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gold-gradient rounded-full flex items-center justify-center shadow-glow-gold">
-                    <Coins className="w-6 h-6 text-primary-foreground" />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-glow-gold ${
+                    coins === opt ? 'bg-white' : 'bg-gold-gradient'
+                  }`}>
+                    <Coins className={`w-6 h-6 ${
+                      coins === opt ? 'text-black' : 'text-primary-foreground'
+                    }`} />
                   </div>
                   <div className="text-2xl font-bold text-white">
                     {opt.toLocaleString()}
