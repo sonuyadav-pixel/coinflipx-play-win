@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import BettingPopup from "@/components/BettingPopup";
 import CoinHistoryModal from "@/components/CoinHistoryModal";
+import BuyCoinsModal from "@/components/BuyCoinsModal";
 import Confetti from "react-confetti";
 
 const CoinGame = () => {
@@ -35,6 +36,7 @@ const CoinGame = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [userCoins, setUserCoins] = useState<any>(null);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
+  const [showBuyCoins, setShowBuyCoins] = useState(false);
 
   // Create new round when component mounts
   useEffect(() => {
@@ -362,7 +364,7 @@ const CoinGame = () => {
 
   const handleAddCoins = () => {
     setShowCoinHistory(false);
-    navigate('/payment');
+    setShowBuyCoins(true);
   };
 
   return (
@@ -603,6 +605,12 @@ const CoinGame = () => {
         onClose={() => setShowCoinHistory(false)}
         userCoins={userCoins}
         onAddCoins={handleAddCoins}
+      />
+
+      {/* Buy Coins Modal */}
+      <BuyCoinsModal
+        isOpen={showBuyCoins}
+        onClose={() => setShowBuyCoins(false)}
       />
 
       {/* Confetti */}
