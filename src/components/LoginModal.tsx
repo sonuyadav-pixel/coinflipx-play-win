@@ -18,54 +18,137 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
   const [loginType, setLoginType] = useState<'email' | 'phone'>('email');
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
   
-  const { signUp, signIn, signInWithGoogle } = useAuth();
+  const { signUp, signIn, signInWithGoogle, signInWithPhone, verifyOtp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (loginType === 'phone') {
+      if (otpSent) {
+        // Verify OTP
+        if (!otp) {
+          toast({
+            title: "Error",
+            description: "Please enter the verification code",
+            variant: "destructive",
+          });
+          return;
+        }
 
-    setLoading(true);
-    
-    try {
-      const { error } = isSignUp 
-        ? await signUp(email, password)
-        : await signIn(email, password);
+        setLoading(true);
+        try {
+          const { error } = await verifyOtp(phone, otp);
+          
+          if (error) {
+            toast({
+              title: "Error",
+              description: error.message,
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Success!",
+              description: "Phone verified successfully!",
+            });
+            onClose();
+            navigate('/game');
+          }
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to verify code",
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        // Send OTP
+        if (!phone) {
+          toast({
+            title: "Error",
+            description: "Please enter your phone number",
+            variant: "destructive",
+          });
+          return;
+        }
 
-      if (error) {
+        setLoading(true);
+        try {
+          const { error } = await signInWithPhone(phone);
+          
+          if (error) {
+            toast({
+              title: "Error",
+              description: error.message,
+              variant: "destructive",
+            });
+          } else {
+            setOtpSent(true);
+            toast({
+              title: "Code Sent!",
+              description: "Check your phone for the verification code",
+            });
+          }
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to send verification code",
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      }
+    } else {
+      // Email authentication
+      if (!email || !password) {
         toast({
           title: "Error",
-          description: error.message,
+          description: "Please fill in all fields",
           variant: "destructive",
         });
-      } else {
-        toast({
-          title: "Success!",
-          description: isSignUp ? "Account created successfully!" : "Welcome back!",
-        });
-        onClose();
-        navigate('/game');
+        return;
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+
+      setLoading(true);
+      
+      try {
+        const { error } = isSignUp 
+          ? await signUp(email, password)
+          : await signIn(email, password);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Success!",
+            description: isSignUp ? "Account created successfully!" : "Welcome back!",
+          });
+          onClose();
+          navigate('/game');
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -126,60 +209,134 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         </div>
 
         {/* Sign Up/Sign In Toggle */}
+        {loginType === 'email' && (
+          <div className="flex bg-muted/50 p-1 rounded-lg mb-6">
+            <button
+              onClick={() => setIsSignUp(false)}
+              className={`flex-1 py-2 px-4 rounded-md transition-all text-sm font-medium ${
+                !isSignUp
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => setIsSignUp(true)}
+              className={`flex-1 py-2 px-4 rounded-md transition-all text-sm font-medium ${
+                isSignUp
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Sign Up
+            </button>
+          </div>
+        )}
+
+        {/* Login Type Toggle */}
         <div className="flex bg-muted/50 p-1 rounded-lg mb-6">
           <button
-            onClick={() => setIsSignUp(false)}
+            onClick={() => {
+              setLoginType('email');
+              setOtpSent(false);
+              setOtp('');
+            }}
             className={`flex-1 py-2 px-4 rounded-md transition-all text-sm font-medium ${
-              !isSignUp
+              loginType === 'email'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Sign In
+            <Mail size={16} className="mr-2" />
+            Email
           </button>
           <button
-            onClick={() => setIsSignUp(true)}
+            onClick={() => {
+              setLoginType('phone');
+              setIsSignUp(false);
+            }}
             className={`flex-1 py-2 px-4 rounded-md transition-all text-sm font-medium ${
-              isSignUp
+              loginType === 'phone'
                 ? 'bg-primary text-primary-foreground shadow-md'
                 : 'text-muted-foreground hover:text-foreground'
             }`}
           >
-            Sign Up
+            <Phone size={16} className="mr-2" />
+            Phone
           </button>
         </div>
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4 mb-6">
-          <div>
-            <Label htmlFor="email" className="text-sm font-medium">
-              Email Address
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
-              disabled={loading}
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="password" className="text-sm font-medium">
-              Password
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
-              disabled={loading}
-            />
-          </div>
+          {loginType === 'email' ? (
+            <>
+              <div>
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
+                  disabled={loading}
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
+                  disabled={loading}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <Label htmlFor="phone" className="text-sm font-medium">
+                  Phone Number
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1234567890"
+                  className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
+                  disabled={loading || otpSent}
+                />
+              </div>
+              
+              {otpSent && (
+                <div>
+                  <Label htmlFor="otp" className="text-sm font-medium">
+                    Verification Code
+                  </Label>
+                  <Input
+                    id="otp"
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="Enter 6-digit code"
+                    className="mt-1 bg-input/50 border-border/50 focus:border-primary/50"
+                    disabled={loading}
+                    maxLength={6}
+                  />
+                </div>
+              )}
+            </>
+          )}
           
           <Button 
             type="submit" 
@@ -188,7 +345,11 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             className="w-full" 
             disabled={loading}
           >
-            {loading ? 'Processing...' : (isSignUp ? 'Create Account & Start Playing' : 'Sign In & Continue')}
+            {loading ? 'Processing...' : 
+              loginType === 'phone' 
+                ? (otpSent ? 'Verify Code' : 'Send Verification Code')
+                : (isSignUp ? 'Create Account & Start Playing' : 'Sign In & Continue')
+            }
           </Button>
         </form>
 
@@ -205,15 +366,13 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           <Button 
             variant="glass" 
             size="lg" 
-            className="w-full justify-start opacity-50" 
-            disabled
+            className="w-full justify-start" 
+            onClick={handleGoogleSignIn}
+            disabled={loading}
           >
             <Chrome size={18} />
-            Google OAuth (Setup Required)
+            {isSignUp ? 'Sign Up with Google' : 'Continue with Google'}
           </Button>
-          <div className="text-xs text-muted-foreground text-center">
-            Configure Google OAuth in Supabase to enable Google sign-in
-          </div>
         </div>
 
         {/* Footer */}
