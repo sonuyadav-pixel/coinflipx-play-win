@@ -80,7 +80,7 @@ const AdminPayments = () => {
 
       if (error) throw error;
 
-      // Update review status
+      // Update review status to approved
       await supabase
         .from('admin_payment_reviews')
         .update({ 

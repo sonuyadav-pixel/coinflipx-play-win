@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, TrendingUp, TrendingDown, Gift, Coins } from "lucide-react";
+import { X, TrendingUp, TrendingDown, Gift, Coins, Clock, CheckCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 interface Transaction {
   id: string;
-  type: 'win' | 'loss' | 'bonus';
+  type: 'win' | 'loss' | 'bonus' | 'purchase_pending' | 'purchase_completed' | 'purchase_rejected';
   amount: number;
   description: string;
   bet_side?: string;
   result?: string;
   created_at: string;
   ended_at?: string;
+  category?: string;
+  status?: string;
+  amount_inr?: number;
 }
 
 interface CoinHistoryModalProps {
@@ -80,13 +83,21 @@ const CoinHistoryModal: React.FC<CoinHistoryModalProps> = ({
         return <TrendingDown className="w-4 h-4 text-red-400" />;
       case 'bonus':
         return <Gift className="w-4 h-4 text-yellow-400" />;
+      case 'purchase_pending':
+        return <Clock className="w-4 h-4 text-orange-400" />;
+      case 'purchase_completed':
+        return <CheckCircle className="w-4 h-4 text-green-400" />;
+      case 'purchase_rejected':
+        return <X className="w-4 h-4 text-red-400" />;
       default:
         return <Coins className="w-4 h-4 text-gray-400" />;
     }
   };
 
   const getAmountColor = (type: string, amount: number) => {
-    if (type === 'bonus' || amount > 0) return 'text-green-400';
+    if (type === 'bonus' || type === 'purchase_completed' || amount > 0) return 'text-green-400';
+    if (type === 'purchase_pending') return 'text-orange-400';
+    if (type === 'purchase_rejected') return 'text-gray-400';
     return 'text-red-400';
   };
 
@@ -133,6 +144,20 @@ const CoinHistoryModal: React.FC<CoinHistoryModalProps> = ({
           )}
         </div>
 
+        {/* Refresh Button */}
+        <div className="mb-4">
+          <Button
+            onClick={fetchTransactions}
+            variant="outline"
+            size="sm"
+            disabled={loading}
+            className="w-full border-primary/30 hover:bg-primary/10"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Refreshing...' : 'Refresh History'}
+          </Button>
+        </div>
+
         {/* Add Coins Button */}
         <div className="mb-6">
           <Button
@@ -177,9 +202,14 @@ const CoinHistoryModal: React.FC<CoinHistoryModalProps> = ({
                   </div>
                   <div className="text-right">
                     <p className={`font-bold ${getAmountColor(transaction.type, transaction.amount)}`}>
-                      {transaction.amount > 0 ? '+' : ''}{Math.floor(transaction.amount).toLocaleString()}
+                      {transaction.type === 'purchase_pending' ? 'Pending' :
+                       transaction.type === 'purchase_rejected' ? 'Rejected' :
+                       transaction.amount > 0 ? '+' : ''}{transaction.amount !== 0 ? Math.floor(transaction.amount).toLocaleString() : ''}
                     </p>
-                    <p className="text-xs text-muted-foreground">coins</p>
+                    <p className="text-xs text-muted-foreground">
+                      {transaction.type === 'purchase_pending' ? 'Under Review' :
+                       transaction.type === 'purchase_rejected' ? 'Payment Failed' : 'coins'}
+                    </p>
                   </div>
                 </div>
               ))}

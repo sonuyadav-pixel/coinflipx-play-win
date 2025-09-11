@@ -60,7 +60,7 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .not('coin_amount', 'is', null)
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(25);
 
     if (betsError) {
       console.error('Error fetching bet transactions:', betsError);
@@ -70,8 +70,24 @@ serve(async (req) => {
       });
     }
 
-    // Format transactions for display
-    const transactions = betTransactions?.map(bet => {
+    // Get payment transactions 
+    const { data: paymentTransactions, error: paymentsError } = await supabase
+      .from('admin_payment_reviews')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(25);
+
+    if (paymentsError) {
+      console.error('Error fetching payment transactions:', paymentsError);
+      return new Response(JSON.stringify({ error: paymentsError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Format bet transactions for display
+    const betTransactionsList = betTransactions?.map(bet => {
       const isWin = bet.is_winner;
       const amount = parseFloat(bet.coin_amount);
       const winnings = parseFloat(bet.coin_winnings || 0);
@@ -86,9 +102,37 @@ serve(async (req) => {
         bet_side: bet.bet_side,
         result: bet.rounds?.result,
         created_at: bet.created_at,
-        ended_at: bet.rounds?.ended_at
+        ended_at: bet.rounds?.ended_at,
+        category: 'game'
       };
     }) || [];
+
+    // Format payment transactions for display
+    const paymentTransactionsList = paymentTransactions?.map(payment => {
+      return {
+        id: `payment-${payment.id}`,
+        type: payment.status === 'approved' ? 'purchase_completed' : 
+              payment.status === 'rejected' ? 'purchase_rejected' : 'purchase_pending',
+        amount: payment.status === 'approved' ? payment.coins_amount : 0,
+        description: payment.status === 'approved' 
+          ? `₹${payment.amount_inr} payment approved - ${payment.coins_amount} coins added`
+          : payment.status === 'rejected'
+          ? `₹${payment.amount_inr} payment rejected - ${payment.coins_amount} coins`
+          : `₹${payment.amount_inr} payment under review - ${payment.coins_amount} coins pending`,
+        bet_side: null,
+        result: null,
+        created_at: payment.created_at,
+        ended_at: payment.reviewed_at || payment.created_at,
+        category: 'payment',
+        status: payment.status,
+        amount_inr: payment.amount_inr
+      };
+    }) || [];
+
+    // Combine all transactions and sort by created_at
+    const allTransactions = [...betTransactionsList, ...paymentTransactionsList]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 50);
 
     // Add initial bonus transaction if user just started
     const { data: userCoins } = await supabase
@@ -97,8 +141,8 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
-    if (userCoins && transactions.length === 0) {
-      transactions.unshift({
+    if (userCoins && allTransactions.length === 0) {
+      allTransactions.unshift({
         id: 'initial-bonus',
         type: 'bonus',
         amount: 1000,
@@ -106,15 +150,16 @@ serve(async (req) => {
         bet_side: null,
         result: null,
         created_at: userCoins.created_at,
-        ended_at: userCoins.created_at
+        ended_at: userCoins.created_at,
+        category: 'bonus'
       });
     }
 
-    console.log('Found transactions:', transactions.length);
+    console.log('Found transactions:', allTransactions.length);
 
     return new Response(JSON.stringify({
       success: true,
-      transactions
+      transactions: allTransactions
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
