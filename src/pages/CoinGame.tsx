@@ -7,46 +7,50 @@ import CoinFlip from "@/components/CoinFlip";
 
 const CoinGame = () => {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState("toss"); // "toss" or "bet"
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [phase, setPhase] = useState("bet"); // Only "bet" phase now
+  const [timeLeft, setTimeLeft] = useState(60);
   const [result, setResult] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [flipping, setFlipping] = useState(false);
-  const [maxTime, setMaxTime] = useState(30);
+  const [maxTime, setMaxTime] = useState(60);
   const [headsPercent, setHeadsPercent] = useState(60);
   const [tailsPercent, setTailsPercent] = useState(40);
   const [totalPlayers, setTotalPlayers] = useState(1234);
+  const [popupTimer, setPopupTimer] = useState(10);
 
   useEffect(() => {
     if (timeLeft === 0) {
-      if (phase === "toss") {
-        // Start coin flip animation
-        setFlipping(true);
-        setTimeout(() => {
-          const coin = Math.random() < 0.5 ? "Heads" : "Tails";
-          setResult(coin);
-          setFlipping(false);
-          setShowPopup(true);
-        }, 2000); // simulate coin flip duration
-
-        setTimeout(() => {
-          setShowPopup(false);
-          setPhase("bet");
-          setTimeLeft(60);
-          setMaxTime(60);
-        }, 12000); // 2s flip + 10s popup
-      } else if (phase === "bet") {
-        // Restart toss phase
-        setPhase("toss");
-        setTimeLeft(30);
-        setMaxTime(30);
-        setResult(null);
-      }
+      // Start coin flip animation
+      setFlipping(true);
+      setTimeout(() => {
+        const coin = Math.random() < 0.5 ? "Heads" : "Tails";
+        setResult(coin);
+        setFlipping(false);
+        setShowPopup(true);
+        setPopupTimer(10);
+      }, 3000); // Video duration
     } else {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
     }
-  }, [timeLeft, phase]);
+  }, [timeLeft]);
+
+  // Popup timer effect
+  useEffect(() => {
+    if (showPopup && popupTimer > 0) {
+      const timer = setTimeout(() => setPopupTimer(popupTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (showPopup && popupTimer === 0) {
+      handleClosePopup();
+    }
+  }, [showPopup, popupTimer]);
+
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    setTimeLeft(60);
+    setResult(null);
+    setPopupTimer(10);
+  };
 
   const progress = (timeLeft / maxTime) * 100;
 
@@ -88,7 +92,7 @@ const CoinGame = () => {
             
             {/* Phase Title */}
             <h1 className="text-3xl md:text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-8">
-              {phase === "toss" ? "Coin Toss Phase" : "Betting Phase"}
+              Betting Phase
             </h1>
 
             {/* Timer with circular progress */}
@@ -125,42 +129,32 @@ const CoinGame = () => {
               </div>
             </div>
 
-            {/* Toss Phase */}
-            {phase === "toss" && !showPopup && (
-              <div className="flex flex-col items-center">
-                {!flipping && (
-                  <p className="text-lg text-muted-foreground mb-8">
-                    Waiting for coin flip...
-                  </p>
-                )}
-
-                {/* Hand and Coin Animation */}
-                <AnimatePresence>
-                  {flipping && (
-                    <motion.div
-                      key="coin-flip"
-                      initial={{ y: -100, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -100, opacity: 0 }}
-                      transition={{ duration: 0.5 }}
-                      className="flex flex-col items-center"
-                    >
-                      <motion.div
-                        className="relative"
-                        animate={{ rotateY: [0, 180, 360, 540, 720, 900] }}
-                        transition={{ duration: 2, ease: "easeInOut" }}
-                      >
-                        <CoinFlip size="lg" className="coin-glow" />
-                      </motion.div>
-                      <p className="mt-4 text-sm text-muted-foreground">Flipping...</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
+            {/* Coin Flip Video Animation */}
+            <AnimatePresence>
+              {flipping && (
+                <motion.div
+                  key="coin-flip-video"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col items-center mb-8"
+                >
+                  <video
+                    autoPlay
+                    muted
+                    className="w-64 h-64 rounded-full object-cover"
+                    onEnded={() => {/* Video will end and result will show */}}
+                  >
+                    <source src="/src/assets/coin-flip.mp4" type="video/mp4" />
+                  </video>
+                  <p className="mt-4 text-lg text-muted-foreground">Flipping coin...</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Betting Phase */}
-            {phase === "bet" && !showPopup && (
+            {!showPopup && !flipping && (
               <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto">
                 <p className="text-xl text-foreground">Place your bets!</p>
                 <p className="text-sm text-muted-foreground">
@@ -224,8 +218,16 @@ const CoinGame = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ duration: 0.5, type: "spring" }}
-              className="glass-card p-12 rounded-3xl shadow-2xl text-center max-w-md mx-4"
+              className="glass-card p-12 rounded-3xl shadow-2xl text-center max-w-md mx-4 relative"
             >
+              {/* Close Button */}
+              <button
+                onClick={handleClosePopup}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-muted/20 hover:bg-muted/40 flex items-center justify-center transition-colors"
+              >
+                ✕
+              </button>
+
               <h2 className="text-3xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-6">
                 Result!
               </h2>
@@ -240,9 +242,22 @@ const CoinGame = () => {
               <p className="text-2xl font-bold text-foreground mb-4">
                 It's {result}!
               </p>
-              <p className="text-sm text-muted-foreground">
-                Popup will close in 10s
-              </p>
+              
+              {/* Timer */}
+              <div className="flex items-center justify-center gap-2 text-muted-foreground">
+                <div className="w-6 h-6 rounded-full border-2 border-primary relative">
+                  <motion.div
+                    className="absolute inset-0 rounded-full border-2 border-primary"
+                    style={{
+                      background: `conic-gradient(hsl(var(--primary)) ${(10 - popupTimer) * 36}deg, transparent 0deg)`
+                    }}
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center text-xs font-mono">
+                    {popupTimer}
+                  </span>
+                </div>
+                <span className="text-sm">Auto-close</span>
+              </div>
             </motion.div>
           </div>
         )}
