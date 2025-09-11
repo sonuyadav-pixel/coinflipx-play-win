@@ -9,7 +9,7 @@ import { useRealtimeCoins } from '@/hooks/useRealtimeCoins';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Coins } from 'lucide-react';
-import goldSparkle from '@/assets/gold-sparkle.png';
+
 
 const Game = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -107,7 +107,7 @@ const Game = () => {
             <h1 className="text-4xl md:text-6xl font-bold bg-gold-gradient bg-clip-text text-transparent">
               Play and win Coins
             </h1>
-            <img src={goldSparkle} alt="Gold sparkle" className="w-12 h-12 md:w-16 md:h-16 animate-pulse" />
+            <span className="text-5xl md:text-6xl animate-pulse">💵</span>
           </div>
           
           <p className="text-lg md:text-xl text-muted-foreground mb-8">
