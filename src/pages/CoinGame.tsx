@@ -99,11 +99,7 @@ const CoinGame = () => {
     try {
       console.log('Fetching user coins...');
       
-      const { data, error } = await supabase.functions.invoke('get-user-coins', {
-        headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-      });
+      const { data, error } = await supabase.functions.invoke('get-user-coins');
 
       console.log('User coins response:', { data, error });
 

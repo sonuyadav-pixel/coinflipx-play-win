@@ -62,22 +62,8 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Supabase sign out error:', error);
-      }
-      // Always clear local state regardless of API response
-      setSession(null);
-      setUser(null);
-      return { error };
-    } catch (error) {
-      console.error('Unexpected sign out error:', error);
-      // Force clear local state
-      setSession(null);
-      setUser(null);
-      return { error };
-    }
+    const { error } = await supabase.auth.signOut();
+    return { error };
   };
 
   return {

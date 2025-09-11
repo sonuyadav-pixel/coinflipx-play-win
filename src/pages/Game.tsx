@@ -16,7 +16,12 @@ const Game = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
-  // Authentication is now handled by AuthGuard
+  // Redirect unauthenticated users to home page
+  useEffect(() => {
+    if (!user && !loading) {
+      navigate('/');
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -30,11 +35,7 @@ const Game = () => {
     try {
       console.log('Fetching user coins...');
       
-      const { data, error } = await supabase.functions.invoke('get-user-coins', {
-        headers: {
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-      });
+      const { data, error } = await supabase.functions.invoke('get-user-coins');
 
       console.log('User coins response:', { data, error });
 
@@ -56,21 +57,21 @@ const Game = () => {
   };
 
   const handleSignOut = async () => {
-    try {
-      const { error } = await signOut();
-      if (error) {
-        console.error('Sign out error:', error);
-        // Even if there's an error, redirect to login
-      }
-      navigate('/');
-    } catch (error) {
-      console.error('Unexpected sign out error:', error);
-      // Force navigation even on error
-      navigate('/');
-    }
+    await signOut();
+    navigate('/');
   };
 
-  // Loading and authentication checks are now handled by AuthGuard
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-hero-gradient flex items-center justify-center">
+        <CoinFlip size="lg" className="coin-glow" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect in useEffect
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden">
