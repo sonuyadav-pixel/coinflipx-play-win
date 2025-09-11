@@ -16,7 +16,7 @@ import Confetti from "react-confetti";
 const CoinGame = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { userCoins } = useRealtimeCoins(); // Use real-time coin updates
+  const { userCoins, refreshCoins } = useRealtimeCoins(); // Use real-time coin updates with manual refresh
   const [phase, setPhase] = useState("bet");
   const [timeLeft, setTimeLeft] = useState(60);
   const [result, setResult] = useState<string | null>(null);
@@ -40,6 +40,19 @@ const CoinGame = () => {
   const [showBuyCoins, setShowBuyCoins] = useState(false);
 
   console.log('CoinGame render:', { showCoinHistory, showBuyCoins });
+  console.log('Current user coins:', userCoins);
+
+  // Debug effect to log coin balance changes
+  useEffect(() => {
+    if (userCoins) {
+      console.log('Coin balance updated in CoinGame:', {
+        balance: userCoins.balance,
+        total_earned: userCoins.total_earned,
+        total_spent: userCoins.total_spent,
+        updated_at: userCoins.updated_at
+      });
+    }
+  }, [userCoins]);
 
   // Create new round when component mounts
   useEffect(() => {
@@ -219,6 +232,12 @@ const CoinGame = () => {
 
       setUserBet(data.bet);
       setShowBettingPopup(false);
+      
+      // Immediately refresh coin balance to show updated amount
+      console.log('Bet placed successfully, refreshing coin balance...');
+      setTimeout(() => {
+        refreshCoins();
+      }, 100); // Small delay to ensure DB update is complete
       
       // Refresh round stats
       fetchRoundStats();

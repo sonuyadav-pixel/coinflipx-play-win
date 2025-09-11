@@ -67,12 +67,17 @@ export const useRealtimeCoins = () => {
         },
         (payload) => {
           console.log('Real-time coin update received:', payload);
+          console.log('Previous coins:', userCoins);
+          console.log('New coins data:', payload.new);
           
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             // Update the coin data with the new values
-            setUserCoins(payload.new as UserCoins);
+            const newCoins = payload.new as UserCoins;
+            console.log('Setting new coins:', newCoins);
+            setUserCoins(newCoins);
           } else if (payload.eventType === 'DELETE') {
             // Handle deletion (shouldn't happen often)
+            console.log('Coin record deleted');
             setUserCoins(null);
           }
         }
@@ -93,8 +98,9 @@ export const useRealtimeCoins = () => {
   }, [user?.id]);
 
   // Manual refresh function
-  const refreshCoins = () => {
-    fetchUserCoins();
+  const refreshCoins = async () => {
+    console.log('Manually refreshing coins...');
+    await fetchUserCoins();
   };
 
   return {
