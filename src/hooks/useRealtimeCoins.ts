@@ -56,7 +56,7 @@ export const useRealtimeCoins = () => {
 
     // Set up real-time subscription for user_coins table
     const channel = supabase
-      .channel('user-coins-changes')
+      .channel(`user-coins-${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -65,22 +65,22 @@ export const useRealtimeCoins = () => {
           table: 'user_coins',
           filter: `user_id=eq.${user.id}` // Only listen to changes for this user
         },
-         (payload) => {
-           console.log('Real-time coin update received:', payload);
-           
-           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-             // Update the coin data with the new values
-             if (payload.new && typeof payload.new === 'object') {
-               const newCoins = payload.new as UserCoins;
-               console.log('Setting new coins:', newCoins);
-               setUserCoins(newCoins);
-             }
-           } else if (payload.eventType === 'DELETE') {
-             // Handle deletion (shouldn't happen often)
-             console.log('Coin record deleted');
-             setUserCoins(null);
-           }
-         }
+        (payload) => {
+          console.log('Real-time coin update received:', payload);
+          
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            // Update the coin data with the new values
+            if (payload.new && typeof payload.new === 'object') {
+              const newCoins = payload.new as UserCoins;
+              console.log('Setting new coins:', newCoins);
+              setUserCoins(newCoins);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            // Handle deletion (shouldn't happen often)
+            console.log('Coin record deleted');
+            setUserCoins(null);
+          }
+        }
       )
       .subscribe((status) => {
         console.log('Subscription status:', status);
