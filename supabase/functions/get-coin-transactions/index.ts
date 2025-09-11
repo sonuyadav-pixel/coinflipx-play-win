@@ -42,117 +42,75 @@ serve(async (req) => {
 
     console.log('Getting coin transactions for user:', user.id);
 
-    // Get bet transactions (both wins and losses)
-    const { data: betTransactions, error: betsError } = await supabase
-      .from('bets')
-      .select(`
-        id,
-        coin_amount,
-        coin_winnings,
-        bet_side,
-        is_winner,
-        created_at,
-        rounds (
-          result,
-          ended_at
-        )
-      `)
-      .eq('user_id', user.id)
-      .not('coin_amount', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(25);
-
-    if (betsError) {
-      console.error('Error fetching bet transactions:', betsError);
-      return new Response(JSON.stringify({ error: betsError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Get payment transactions 
-    const { data: paymentTransactions, error: paymentsError } = await supabase
-      .from('admin_payment_reviews')
+    // Get all transactions from the coin_transactions table
+    const { data: coinTransactions, error: transactionsError } = await supabase
+      .from('coin_transactions')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(25);
+      .limit(50);
 
-    if (paymentsError) {
-      console.error('Error fetching payment transactions:', paymentsError);
-      return new Response(JSON.stringify({ error: paymentsError.message }), {
+    if (transactionsError) {
+      console.error('Error fetching coin transactions:', transactionsError);
+      return new Response(JSON.stringify({ error: transactionsError.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Format bet transactions for display
-    const betTransactionsList = betTransactions?.map(bet => {
-      const isWin = bet.is_winner;
-      const amount = parseFloat(bet.coin_amount);
-      const winnings = parseFloat(bet.coin_winnings || 0);
-      
+    // Format transactions for display
+    const allTransactions = coinTransactions?.map(transaction => {
       return {
-        id: bet.id,
-        type: isWin ? 'win' : 'loss',
-        amount: isWin ? winnings : -amount,
-        description: isWin 
-          ? `Won ${winnings} coins (${bet.bet_side} bet)` 
-          : `Lost ${amount} coins (${bet.bet_side} bet)`,
-        bet_side: bet.bet_side,
-        result: bet.rounds?.result,
-        created_at: bet.created_at,
-        ended_at: bet.rounds?.ended_at,
-        category: 'game'
+        id: transaction.id,
+        type: transaction.type,
+        amount: parseFloat(transaction.amount),
+        description: transaction.description,
+        bet_side: transaction.metadata?.bet_side || null,
+        result: transaction.metadata?.result || null,
+        created_at: transaction.created_at,
+        ended_at: transaction.updated_at,
+        category: transaction.reference_type || 'general',
+        status: transaction.metadata?.status || null,
+        amount_inr: transaction.metadata?.amount_inr || null
       };
     }) || [];
 
-    // Format payment transactions for display
-    const paymentTransactionsList = paymentTransactions?.map(payment => {
-      return {
-        id: `payment-${payment.id}`,
-        type: payment.status === 'approved' ? 'purchase_completed' : 
-              payment.status === 'rejected' ? 'purchase_rejected' : 'purchase_pending',
-        amount: payment.status === 'approved' ? payment.coins_amount : 0,
-        description: payment.status === 'approved' 
-          ? `₹${payment.amount_inr} payment approved - ${payment.coins_amount} coins added`
-          : payment.status === 'rejected'
-          ? `₹${payment.amount_inr} payment rejected - ${payment.coins_amount} coins`
-          : `₹${payment.amount_inr} payment under review - ${payment.coins_amount} coins pending`,
-        bet_side: null,
-        result: null,
-        created_at: payment.created_at,
-        ended_at: payment.reviewed_at || payment.created_at,
-        category: 'payment',
-        status: payment.status,
-        amount_inr: payment.amount_inr
-      };
-    }) || [];
-
-    // Combine all transactions and sort by created_at
-    const allTransactions = [...betTransactionsList, ...paymentTransactionsList]
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 50);
-
-    // Add initial bonus transaction if user just started
+    // Check if user needs welcome bonus transaction
     const { data: userCoins } = await supabase
       .from('user_coins')
       .select('created_at, total_earned')
       .eq('user_id', user.id)
       .single();
 
+    // Add welcome bonus if no transactions exist
     if (userCoins && allTransactions.length === 0) {
-      allTransactions.unshift({
-        id: 'initial-bonus',
-        type: 'bonus',
-        amount: 1000,
-        description: 'Welcome bonus - 1000 free coins!',
-        bet_side: null,
-        result: null,
-        created_at: userCoins.created_at,
-        ended_at: userCoins.created_at,
-        category: 'bonus'
-      });
+      // Create the welcome bonus transaction in the database
+      const { error: bonusError } = await supabase
+        .from('coin_transactions')
+        .insert({
+          user_id: user.id,
+          type: 'bonus',
+          amount: 1000,
+          description: 'Welcome bonus - 1000 free coins!',
+          reference_type: 'bonus',
+          metadata: {
+            welcome_bonus: true
+          }
+        });
+
+      if (!bonusError) {
+        allTransactions.unshift({
+          id: 'welcome-bonus',
+          type: 'bonus',
+          amount: 1000,
+          description: 'Welcome bonus - 1000 free coins!',
+          bet_side: null,
+          result: null,
+          created_at: userCoins.created_at,
+          ended_at: userCoins.created_at,
+          category: 'bonus'
+        });
+      }
     }
 
     console.log('Found transactions:', allTransactions.length);
