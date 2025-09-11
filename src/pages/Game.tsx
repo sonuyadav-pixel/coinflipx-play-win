@@ -4,6 +4,7 @@ import CoinFlip from '@/components/CoinFlip';
 import LoginModal from '@/components/LoginModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import goldSparkle from '@/assets/gold-sparkle.png';
 
 const Game = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -72,9 +73,12 @@ const Game = () => {
             <CoinFlip size="md" className="coin-glow" />
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-6">
-            Coming Soon
-          </h1>
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gold-gradient bg-clip-text text-transparent">
+              Play and win Money
+            </h1>
+            <img src={goldSparkle} alt="Gold sparkle" className="w-12 h-12 md:w-16 md:h-16 animate-pulse" />
+          </div>
           
           <p className="text-lg md:text-xl text-muted-foreground mb-8">
             The ultimate coin flipping experience is being crafted. 
@@ -118,10 +122,9 @@ const Game = () => {
             <Button 
               variant="hero" 
               size="lg"
-              disabled
-              className="px-8 py-3 opacity-50"
+              className="px-8 py-3"
             >
-              Game Coming Soon
+              Play Now
             </Button>
           </div>
 
