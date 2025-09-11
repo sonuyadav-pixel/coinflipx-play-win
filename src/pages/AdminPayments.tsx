@@ -90,6 +90,19 @@ const AdminPayments = () => {
 
       console.log('Admin-add-coins response:', data);
 
+      // Check if the response indicates success
+      if (data?.error) {
+        console.error('Admin-add-coins returned error:', data.error);
+        throw new Error(data.error);
+      }
+
+      if (!data?.success) {
+        console.error('Admin-add-coins did not return success:', data);
+        throw new Error('Failed to add coins - no success response');
+      }
+
+      console.log('Coins added successfully, new balance:', data.new_balance);
+
       // Update review status to approved
       await supabase
         .from('admin_payment_reviews')
@@ -102,7 +115,7 @@ const AdminPayments = () => {
 
       toast({
         title: "Payment Approved! ✅",
-        description: `Added ${coinsAmount} coins to ${userEmail}`,
+        description: `Added ${coinsAmount} coins. New balance: ${data.new_balance}`,
       });
 
       // Refresh data

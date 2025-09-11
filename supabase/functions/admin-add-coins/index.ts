@@ -50,14 +50,25 @@ serve(async (req) => {
     });
 
     if (error) {
-      console.error('Error adding coins:', error);
+      console.error('Error calling admin_add_coins RPC:', error);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log('Admin add coins result:', data);
+    console.log('admin_add_coins RPC result:', data);
+
+    // Check if the database function returned an error
+    if (data && data.error) {
+      console.error('Database function returned error:', data.error);
+      return new Response(JSON.stringify(data), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Successfully added coins. Final response:', data);
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
