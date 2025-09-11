@@ -340,7 +340,7 @@ const CoinGame = () => {
                     className="w-64 h-64 rounded-full object-cover"
                     onEnded={() => {/* Video will end and result will show */}}
                   >
-                    <source src="/src/assets/coin-flip.mp4" type="video/mp4" />
+                    <source src="/coin-flip-animation.mp4" type="video/mp4" />
                   </video>
                   <p className="mt-4 text-lg text-muted-foreground">Flipping coin...</p>
                 </motion.div>
