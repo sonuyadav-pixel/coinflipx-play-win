@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CircleDollarSign, ArrowLeft } from "lucide-react";
+import { CircleDollarSign, ArrowLeft, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import CoinFlip from "@/components/CoinFlip";
@@ -32,19 +32,26 @@ const CoinGame = () => {
   const [userWon, setUserWon] = useState<boolean | null>(null);
   const [winAmount, setWinAmount] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [userCoins, setUserCoins] = useState<any>(null);
 
   // Create new round when component mounts
   useEffect(() => {
     createNewRound();
-  }, []);
+    if (user) {
+      fetchUserCoins();
+    }
+  }, [user]);
 
   // Update round stats and historical data periodically
   useEffect(() => {
     if (currentRoundId && phase === "bet") {
       const interval = setInterval(() => {
-        fetchRoundStats();
-        fetchHistoricalStats();
-        fetchRecentResults();
+      fetchRoundStats();
+      fetchHistoricalStats();
+      fetchRecentResults();
+      if (user) {
+        fetchUserCoins();
+      }
       }, 2000);
       return () => clearInterval(interval);
     }
@@ -83,6 +90,27 @@ const CoinGame = () => {
         description: "Failed to create new round",
         variant: "destructive"
       });
+    }
+  };
+
+  const fetchUserCoins = async () => {
+    if (!user) return;
+
+    try {
+      console.log('Fetching user coins...');
+      
+      const { data, error } = await supabase.functions.invoke('get-user-coins');
+
+      console.log('User coins response:', { data, error });
+
+      if (error) {
+        console.error('Supabase function error:', error);
+        return;
+      }
+
+      setUserCoins(data.coins);
+    } catch (error) {
+      console.error('Error fetching user coins:', error);
     }
   };
 
@@ -180,19 +208,29 @@ const CoinGame = () => {
   const handlePlaceBet = async (amount: number) => {
     if (!user || !currentRoundId) return;
 
+    // Check if user has enough coins
+    if (!userCoins || userCoins.balance < amount) {
+      toast({
+        title: "Insufficient Coins",
+        description: "You don't have enough coins to place this bet",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsPlacingBet(true);
     try {
-      console.log('Placing bet:', { roundId: currentRoundId, betSide: selectedBetSide, betAmount: amount });
+      console.log('Placing coin bet:', { roundId: currentRoundId, betSide: selectedBetSide, coinAmount: amount });
       
-      const { data, error } = await supabase.functions.invoke('place-bet', {
+      const { data, error } = await supabase.functions.invoke('place-coin-bet', {
         body: {
           roundId: currentRoundId,
           betSide: selectedBetSide,
-          betAmount: amount
+          coinAmount: amount
         }
       });
 
-      console.log('Place bet response:', { data, error });
+      console.log('Place coin bet response:', { data, error });
 
       if (error) {
         console.error('Supabase function error:', error);
@@ -201,13 +239,16 @@ const CoinGame = () => {
 
       setUserBet(data.bet);
       setShowBettingPopup(false);
+      
+      // Refresh user coins and stats
+      fetchUserCoins();
+      fetchRoundStats();
+      
       toast({
         title: "Bet Placed!",
-        description: `$${amount} on ${selectedBetSide}`,
+        description: `${amount} coins on ${selectedBetSide}`,
       });
       
-      // Fetch updated stats
-      fetchRoundStats();
     } catch (error: any) {
       console.error('Error placing bet:', error);
       toast({
@@ -233,6 +274,12 @@ const CoinGame = () => {
 
       if (error) throw error;
       
+      // Process coin winnings
+      await supabase.rpc('process_coin_winnings', {
+        _round_id: currentRoundId,
+        _result: coinResult
+      });
+      
       console.log('Round finalized:', data);
     } catch (error) {
       console.error('Error finalizing round:', error);
@@ -253,7 +300,7 @@ const CoinGame = () => {
           const won = userBet.bet_side === coin;
           setUserWon(won);
           if (won) {
-            setWinAmount(parseFloat(userBet.bet_amount) * 2);
+            setWinAmount(parseFloat(userBet.coin_amount || userBet.bet_amount) * 2);
             setShowConfetti(true);
             setTimeout(() => setShowConfetti(false), 5000);
           } else {
@@ -267,6 +314,13 @@ const CoinGame = () => {
         setShowPopup(true);
         setPopupTimer(30);
         finalizeCoinFlip(coin);
+        
+        // Refresh user coins after result
+        setTimeout(() => {
+          if (user) {
+            fetchUserCoins();
+          }
+        }, 1000);
       }, 7000); // Video duration
     } else {
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
@@ -330,6 +384,17 @@ const CoinGame = () => {
               CoinFlipX Live
             </h1>
           </div>
+          
+          {/* User Coin Balance */}
+          {user && userCoins && (
+            <div className="flex items-center gap-2 glass-card px-4 py-2 rounded-lg">
+              <div className="text-2xl">🪙</div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Your Coins</p>
+                <p className="text-lg font-bold text-primary">{Math.floor(userCoins.balance).toLocaleString()}</p>
+              </div>
+            </div>
+          )}
         </header>
 
         {/* Main Game Area */}
@@ -407,7 +472,7 @@ const CoinGame = () => {
             {userBet && !showPopup && !flipping && (
               <div className="mb-6 p-4 glass-card rounded-lg border border-green-500">
                 <p className="text-green-400 text-center font-semibold">
-                  ✅ Bet placed: ${userBet.bet_amount} on {userBet.bet_side}
+                  ✅ Bet placed: {Math.floor(parseFloat(userBet.coin_amount || userBet.bet_amount))} coins on {userBet.bet_side}
                 </p>
               </div>
             )}
@@ -483,9 +548,9 @@ const CoinGame = () => {
                           : 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black'
                       }`}
                     >
-                      <CircleDollarSign className="w-5 h-5" />
-                      Bet on Heads
-                    </Button>
+                  <Coins className="w-5 h-5" />
+                  Bet on Heads
+                </Button>
                   </motion.div>
                   
                   <motion.div whileTap={{ scale: 0.95 }}>
@@ -498,7 +563,7 @@ const CoinGame = () => {
                           : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                       }`}
                     >
-                      <CircleDollarSign className="w-5 h-5" />
+                      <Coins className="w-5 h-5" />
                       Bet on Tails
                     </Button>
                   </motion.div>
@@ -578,10 +643,10 @@ const CoinGame = () => {
                         Congratulations!
                       </h3>
                       <p className="text-xl text-green-300 mb-2">
-                        You won ${winAmount.toFixed(2)}!
+                        You won {Math.floor(winAmount)} coins!
                       </p>
                       <p className="text-sm text-gray-400">
-                        Your bet: ${userBet.bet_amount} on {userBet.bet_side}
+                        Your bet: {Math.floor(parseFloat(userBet.coin_amount || userBet.bet_amount))} coins on {userBet.bet_side}
                       </p>
                     </div>
                   ) : (
@@ -591,10 +656,10 @@ const CoinGame = () => {
                         Better luck next time!
                       </h3>
                       <p className="text-lg text-gray-300 mb-2">
-                        You lost ${userBet.bet_amount}
+                        You lost {Math.floor(parseFloat(userBet.coin_amount || userBet.bet_amount))} coins
                       </p>
                       <p className="text-sm text-gray-400">
-                        Your bet: ${userBet.bet_amount} on {userBet.bet_side}
+                        Your bet: {Math.floor(parseFloat(userBet.coin_amount || userBet.bet_amount))} coins on {userBet.bet_side}
                       </p>
                     </div>
                   )}

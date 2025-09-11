@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { X, CircleDollarSign } from "lucide-react";
+import { X, Coins } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
@@ -98,7 +98,7 @@ export default function BettingPopup({
                 }`}
                 disabled={isPlacing}
               >
-                ${amount}
+                {amount}
               </Button>
             ))}
           </div>
@@ -124,13 +124,13 @@ export default function BettingPopup({
           <div className="mb-6 p-4 bg-gray-800 rounded-lg border border-gray-600">
             <div className="text-center">
               <p className="text-gray-300 text-sm">Betting Amount:</p>
-              <p className="text-2xl font-bold text-white">${selectedAmount}</p>
+              <p className="text-2xl font-bold text-white">{selectedAmount} coins</p>
               <p className="text-sm text-gray-400">on {betSide}</p>
               
               {/* Potential Winnings */}
               <div className="mt-3 pt-3 border-t border-gray-700">
                 <p className="text-green-400 text-sm font-semibold">Potential Winnings:</p>
-                <p className="text-xl font-bold text-green-400">${(selectedAmount * 2).toFixed(2)}</p>
+                <p className="text-xl font-bold text-green-400">{(selectedAmount * 2)} coins</p>
                 <p className="text-xs text-gray-500">Win 2X your bet amount!</p>
               </div>
             </div>
@@ -143,8 +143,8 @@ export default function BettingPopup({
           disabled={!selectedAmount || selectedAmount <= 0 || isPlacing}
           className={`w-full py-3 text-lg font-bold ${buttonColor} text-white disabled:opacity-50 disabled:cursor-not-allowed`}
         >
-          <CircleDollarSign className="w-5 h-5 mr-2" />
-          {isPlacing ? "Placing Bet..." : `Place Bet - $${selectedAmount || 0}`}
+          <Coins className="w-5 h-5 mr-2" />
+          {isPlacing ? "Placing Bet..." : `Place Bet - ${selectedAmount || 0} coins`}
         </Button>
       </motion.div>
     </div>

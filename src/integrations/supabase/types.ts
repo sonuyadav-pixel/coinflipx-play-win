@@ -18,6 +18,8 @@ export type Database = {
         Row: {
           bet_amount: number
           bet_side: string
+          coin_amount: number | null
+          coin_winnings: number | null
           created_at: string
           id: string
           is_winner: boolean | null
@@ -28,6 +30,8 @@ export type Database = {
         Insert: {
           bet_amount: number
           bet_side: string
+          coin_amount?: number | null
+          coin_winnings?: number | null
           created_at?: string
           id?: string
           is_winner?: boolean | null
@@ -38,6 +42,8 @@ export type Database = {
         Update: {
           bet_amount?: number
           bet_side?: string
+          coin_amount?: number | null
+          coin_winnings?: number | null
           created_at?: string
           id?: string
           is_winner?: boolean | null
@@ -109,12 +115,66 @@ export type Database = {
         }
         Relationships: []
       }
+      user_coins: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          total_earned: number
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          total_earned?: number
+          total_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      initialize_user_coins: {
+        Args: { _user_id: string }
+        Returns: {
+          balance: number
+          created_at: string
+          id: string
+          total_earned: number
+          total_spent: number
+          updated_at: string
+          user_id: string
+        }
+      }
+      process_coin_bet: {
+        Args: {
+          _bet_side: string
+          _coin_amount: number
+          _round_id: string
+          _user_id: string
+        }
+        Returns: Json
+      }
+      process_coin_winnings: {
+        Args: { _result: string; _round_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
