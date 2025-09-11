@@ -217,7 +217,6 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
                 CoinFlipX
               </h1>
             </div>
-            <p className="text-primary text-lg font-semibold tracking-wider">PLAY & WIN BIG</p>
           </div>
 
           {/* Rate Display */}
