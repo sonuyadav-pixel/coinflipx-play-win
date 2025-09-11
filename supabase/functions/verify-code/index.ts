@@ -11,10 +11,6 @@ interface VerifyCodeRequest {
   code: string;
 }
 
-// This should match the storage from send-verification-code
-// In production, use a shared database
-const verificationCodes = new Map<string, { code: string; expires: number }>();
-
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -34,46 +30,36 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const storedData = verificationCodes.get(email);
-    
-    if (!storedData) {
-      return new Response(
-        JSON.stringify({ error: "No verification code found for this email" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    if (Date.now() > storedData.expires) {
-      verificationCodes.delete(email);
-      return new Response(
-        JSON.stringify({ error: "Verification code has expired" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    if (storedData.code !== code) {
-      return new Response(
-        JSON.stringify({ error: "Invalid verification code" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
-    }
-
-    // Code is valid, clean up
-    verificationCodes.delete(email);
-
     // Create Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Retrieve verification code from database
+    const { data: verificationData, error: fetchError } = await supabase
+      .from('verification_codes')
+      .select('*')
+      .eq('email', email)
+      .eq('code', code)
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (fetchError || !verificationData) {
+      console.log("Verification code not found or expired for email:", email);
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired verification code" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Code is valid, delete it from database
+    await supabase
+      .from('verification_codes')
+      .delete()
+      .eq('email', email);
 
     // Create or get user
     const { data: userData, error: userError } = await supabase.auth.admin.createUser({

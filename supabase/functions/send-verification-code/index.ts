@@ -1,7 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { Resend } from "npm:resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,9 +15,6 @@ const corsHeaders = {
 interface VerificationCodeRequest {
   email: string;
 }
-
-// Store verification codes in memory (in production, use a database)
-const verificationCodes = new Map<string, { code: string; expires: number }>();
 
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
@@ -37,13 +38,36 @@ const handler = async (req: Request): Promise<Response> => {
     // Generate 6-digit verification code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Store code with 10-minute expiration
-    verificationCodes.set(email, {
-      code,
-      expires: Date.now() + 10 * 60 * 1000, // 10 minutes
-    });
+    // Set expiration time (10 minutes from now)
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     console.log(`Generated verification code for ${email}: ${code}`);
+
+    // Clean up any existing codes for this email
+    await supabase
+      .from('verification_codes')
+      .delete()
+      .eq('email', email);
+
+    // Store code in database
+    const { error: dbError } = await supabase
+      .from('verification_codes')
+      .insert({
+        email,
+        code,
+        expires_at: expiresAt
+      });
+
+    if (dbError) {
+      console.error("Database error:", dbError);
+      return new Response(
+        JSON.stringify({ error: "Failed to store verification code" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
 
     const emailResponse = await resend.emails.send({
       from: "Coin Game <onboarding@resend.dev>",
