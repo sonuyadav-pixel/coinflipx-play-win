@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_payment_reviews: {
+        Row: {
+          admin_notes: string | null
+          amount_inr: number
+          coins_amount: number
+          created_at: string
+          id: string
+          payment_transaction_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_confirmation_message: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount_inr: number
+          coins_amount: number
+          created_at?: string
+          id?: string
+          payment_transaction_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_confirmation_message?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount_inr?: number
+          coins_amount?: number
+          created_at?: string
+          id?: string
+          payment_transaction_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_confirmation_message?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       bets: {
         Row: {
           bet_amount: number
@@ -63,33 +108,42 @@ export type Database = {
       }
       payment_transactions: {
         Row: {
+          admin_notes: string | null
           amount_inr: number
           coins_purchased: number
           created_at: string
           id: string
           payment_method: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           status: string | null
           transaction_ref: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
           amount_inr: number
           coins_purchased: number
           created_at?: string
           id?: string
           payment_method?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string | null
           transaction_ref?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
           amount_inr?: number
           coins_purchased?: number
           created_at?: string
           id?: string
           payment_method?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: string | null
           transaction_ref?: string | null
           updated_at?: string

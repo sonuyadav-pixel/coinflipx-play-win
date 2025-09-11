@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import CoinFlip from "@/components/CoinFlip";
+import PaymentConfirmationModal from "@/components/PaymentConfirmationModal";
 
 interface BuyCoinsModalProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
   const [coins, setCoins] = useState(100);
   const [showQR, setShowQR] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [currentTransaction, setCurrentTransaction] = useState<any>(null);
 
   console.log('BuyCoinsModal render:', { isOpen, showQR, processing });
 
@@ -57,6 +60,7 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
       const transaction = await createPaymentTransaction(coins, priceINR);
       
       if (transaction) {
+        setCurrentTransaction(transaction);
         setShowQR(true);
         toast({
           title: "Payment Initiated",
@@ -87,10 +91,43 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
     }
   };
 
+  const handlePaymentComplete = async () => {
+    if (!currentTransaction) return;
+
+    setProcessing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('complete-payment', {
+        body: {
+          payment_transaction_id: currentTransaction.id,
+          coins_amount: coins,
+          amount_inr: priceINR,
+          user_message: 'Payment completed via QR code scan'
+        }
+      });
+
+      if (error) throw error;
+
+      setShowQR(false);
+      setShowConfirmation(true);
+      
+    } catch (error) {
+      console.error('Error completing payment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit payment for review",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleClose = () => {
     setShowQR(false);
+    setShowConfirmation(false);
     setCoins(100);
     setProcessing(false);
+    setCurrentTransaction(null);
     onClose();
   };
 
@@ -159,16 +196,20 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
               <div className="space-y-3">
                 <Button 
                   className="w-full btn-hero text-primary-foreground font-bold py-3"
-                  onClick={() => {
-                    toast({
-                      title: "Payment Completed! 🎉",
-                      description: `${coins.toLocaleString()} coins added instantly!`,
-                    });
-                    handleClose();
-                  }}
+                  onClick={handlePaymentComplete}
+                  disabled={processing}
                 >
-                  <CheckCircle className="w-5 h-5 mr-2" />
-                  I&apos;ve Completed Payment
+                  {processing ? (
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                      <span>Processing...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-5 h-5 mr-2" />
+                      I&apos;ve Completed Payment
+                    </>
+                  )}
                 </Button>
                 
                 <Button 
@@ -188,117 +229,127 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl bg-card/95 border-primary/20 backdrop-blur-sm max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Crown className="w-6 h-6 text-primary" />
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Buy Coins
-              </h2>
-            </div>
-            <Button
-              variant="ghost"
-              onClick={handleClose}
-              className="hover:bg-primary/10 hover:text-primary transition-all duration-300"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-        </DialogHeader>
-
-        <div className="p-6">
-          {/* Brand Header */}
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <CoinFlip size="md" />
-              <h1 className="text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent">
-                CoinFlipX
-              </h1>
-            </div>
-          </div>
-
-          {/* Rate Display */}
-          <div className="text-center mb-6">
-            <p className="text-primary text-xl font-bold">1 INR = 100 Coins</p>
-          </div>
-
-          {/* Coin Packages Grid */}
-          <div className="grid grid-cols-3 gap-4 mb-6 w-full max-w-2xl mx-auto">
-            {presetOptions.map((opt) => (
-              <Card
-                key={opt}
-                className={`relative cursor-pointer transition-all duration-300 hover:scale-105 p-4 ${
-                  coins === opt 
-                    ? 'bg-gold-gradient border-2 border-primary shadow-glow-gold' 
-                    : 'bg-card/20 border-2 border-primary/30 hover:border-primary/50'
-                } backdrop-blur-sm`}
-                onClick={() => setCoins(opt)}
+    <>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
+        <DialogContent className="max-w-4xl bg-card/95 border-primary/20 backdrop-blur-sm max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Crown className="w-6 h-6 text-primary" />
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  Buy Coins
+                </h2>
+              </div>
+              <Button
+                variant="ghost"
+                onClick={handleClose}
+                className="hover:bg-primary/10 hover:text-primary transition-all duration-300"
               >
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-glow-gold ${
-                    coins === opt ? 'bg-white' : 'bg-gold-gradient'
-                  }`}>
-                    <Coins className={`w-6 h-6 ${
-                      coins === opt ? 'text-black' : 'text-primary-foreground'
-                    }`} />
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6">
+            {/* Brand Header */}
+            <div className="text-center mb-6">
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <CoinFlip size="md" />
+                <h1 className="text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent">
+                  CoinFlipX
+                </h1>
+              </div>
+            </div>
+
+            {/* Rate Display */}
+            <div className="text-center mb-6">
+              <p className="text-primary text-xl font-bold">1 INR = 100 Coins</p>
+            </div>
+
+            {/* Coin Packages Grid */}
+            <div className="grid grid-cols-3 gap-4 mb-6 w-full max-w-2xl mx-auto">
+              {presetOptions.map((opt) => (
+                <Card
+                  key={opt}
+                  className={`relative cursor-pointer transition-all duration-300 hover:scale-105 p-4 ${
+                    coins === opt 
+                      ? 'bg-gold-gradient border-2 border-primary shadow-glow-gold' 
+                      : 'bg-card/20 border-2 border-primary/30 hover:border-primary/50'
+                  } backdrop-blur-sm`}
+                  onClick={() => setCoins(opt)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-glow-gold ${
+                      coins === opt ? 'bg-white' : 'bg-gold-gradient'
+                    }`}>
+                      <Coins className={`w-6 h-6 ${
+                        coins === opt ? 'text-black' : 'text-primary-foreground'
+                      }`} />
+                    </div>
+                    <div className={`text-2xl font-bold ${
+                      coins === opt ? 'text-black' : 'text-white'
+                    }`}>
+                      {opt.toLocaleString()}
+                    </div>
                   </div>
-                  <div className={`text-2xl font-bold ${
-                    coins === opt ? 'text-black' : 'text-white'
-                  }`}>
-                    {opt.toLocaleString()}
+                </Card>
+              ))}
+            </div>
+
+            {/* Custom Input */}
+            <div className="w-full max-w-2xl mx-auto mb-6">
+              <Input
+                type="number"
+                min="100"
+                value={coins}
+                onChange={(e) => handleCustomInput(e.target.value)}
+                className="w-full text-center text-3xl font-bold py-8 bg-card/20 border-2 border-primary/30 focus:border-primary text-white placeholder:text-muted-foreground backdrop-blur-sm rounded-2xl"
+                placeholder="Enter coin amount"
+              />
+            </div>
+
+            {/* Payment Display */}
+            <div className="text-center mb-6">
+              <p className="text-white text-2xl font-semibold">
+                You will pay: <span className="text-primary">₹{priceINR}</span>
+              </p>
+            </div>
+
+            {/* CTA Button */}
+            <div className="flex justify-center mb-4">
+              <Button
+                onClick={handlePayment}
+                disabled={!coins || coins < 100 || processing}
+                className="bg-gold-gradient hover:shadow-glow-gold text-primary-foreground font-bold py-4 px-12 text-xl rounded-2xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                {processing ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
+                    <span>Processing...</span>
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                ) : (
+                  <span>Pay ₹{priceINR}</span>
+                )}
+              </Button>
+            </div>
 
-          {/* Custom Input */}
-          <div className="w-full max-w-2xl mx-auto mb-6">
-            <Input
-              type="number"
-              min="100"
-              value={coins}
-              onChange={(e) => handleCustomInput(e.target.value)}
-              className="w-full text-center text-3xl font-bold py-8 bg-card/20 border-2 border-primary/30 focus:border-primary text-white placeholder:text-muted-foreground backdrop-blur-sm rounded-2xl"
-              placeholder="Enter coin amount"
-            />
+            {/* Footer */}
+            <div className="text-center space-y-1">
+              <p className="text-muted-foreground text-sm">Coins added instantly</p>
+              <p className="text-muted-foreground text-sm">Refund policy</p>
+            </div>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Payment Display */}
-          <div className="text-center mb-6">
-            <p className="text-white text-2xl font-semibold">
-              You will pay: <span className="text-primary">₹{priceINR}</span>
-            </p>
-          </div>
-
-          {/* CTA Button */}
-          <div className="flex justify-center mb-4">
-            <Button
-              onClick={handlePayment}
-              disabled={!coins || coins < 100 || processing}
-              className="bg-gold-gradient hover:shadow-glow-gold text-primary-foreground font-bold py-4 px-12 text-xl rounded-2xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-            >
-              {processing ? (
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
-                  <span>Processing...</span>
-                </div>
-              ) : (
-                <span>Pay ₹{priceINR}</span>
-              )}
-            </Button>
-          </div>
-
-          {/* Footer */}
-          <div className="text-center space-y-1">
-            <p className="text-muted-foreground text-sm">Coins added instantly</p>
-            <p className="text-muted-foreground text-sm">Refund policy</p>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+      {/* Payment Confirmation Modal */}
+      <PaymentConfirmationModal
+        isOpen={showConfirmation}
+        onClose={handleClose}
+        coins={coins}
+        amount={priceINR}
+      />
+    </>
   );
 };
 

@@ -1,0 +1,262 @@
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, Clock, User, Coins, Calendar } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/hooks/use-toast';
+
+interface PaymentReview {
+  id: string;
+  payment_transaction_id: string;
+  user_id: string;
+  coins_amount: number;
+  amount_inr: number;
+  user_confirmation_message: string;
+  status: string;
+  created_at: string;
+  profiles?: {
+    email?: string;
+    display_name?: string;
+  };
+}
+
+const AdminPayments = () => {
+  const { user } = useAuth();
+  const [reviews, setReviews] = useState<PaymentReview[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState<string | null>(null);
+
+  const fetchPaymentReviews = async () => {
+    try {
+      // First get payment reviews
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from('admin_payment_reviews')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (reviewsError) throw reviewsError;
+
+      // Then get user profiles for each review
+      const reviewsWithProfiles = await Promise.all(
+        (reviewsData || []).map(async (review) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, display_name')
+            .eq('user_id', review.user_id)
+            .single();
+
+          return {
+            ...review,
+            profiles: profile
+          };
+        })
+      );
+
+      setReviews(reviewsWithProfiles);
+    } catch (error) {
+      console.error('Error fetching payment reviews:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load payment reviews",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const approvePayment = async (reviewId: string, userEmail: string, coinsAmount: number) => {
+    setProcessing(reviewId);
+    try {
+      // Use admin-add-coins function to add coins
+      const { error } = await supabase.functions.invoke('admin-add-coins', {
+        body: {
+          user_email: userEmail,
+          coin_amount: coinsAmount
+        }
+      });
+
+      if (error) throw error;
+
+      // Update review status
+      await supabase
+        .from('admin_payment_reviews')
+        .update({ 
+          status: 'approved',
+          reviewed_by: user?.id,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', reviewId);
+
+      toast({
+        title: "Payment Approved! ✅",
+        description: `Added ${coinsAmount} coins to ${userEmail}`,
+      });
+
+      // Refresh data
+      fetchPaymentReviews();
+    } catch (error) {
+      console.error('Error approving payment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve payment",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const rejectPayment = async (reviewId: string) => {
+    setProcessing(reviewId);
+    try {
+      await supabase
+        .from('admin_payment_reviews')
+        .update({ 
+          status: 'rejected',
+          reviewed_by: user?.id,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', reviewId);
+
+      toast({
+        title: "Payment Rejected",
+        description: "Payment request has been rejected",
+      });
+
+      // Refresh data
+      fetchPaymentReviews();
+    } catch (error) {
+      console.error('Error rejecting payment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject payment",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  useEffect(() => {
+    fetchPaymentReviews();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-hero-gradient flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-hero-gradient p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-2">
+            Payment Reviews
+          </h1>
+          <p className="text-muted-foreground">
+            Manage user payment completion requests
+          </p>
+        </div>
+
+        {reviews.length === 0 ? (
+          <Card className="bg-card/95 border-primary/20">
+            <CardContent className="text-center py-12">
+              <Clock className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No Payment Reviews</h3>
+              <p className="text-muted-foreground">All payment requests have been processed.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6">
+            {reviews.map((review) => (
+              <Card key={review.id} className="bg-card/95 border-primary/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      {review.profiles?.display_name || review.profiles?.email || 'Unknown User'}
+                    </CardTitle>
+                    <Badge variant={
+                      review.status === 'pending_review' ? 'default' :
+                      review.status === 'approved' ? 'secondary' : 
+                      'destructive'
+                    }>
+                      {review.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Coins className="w-4 h-4 text-primary" />
+                      <span className="font-semibold">{review.coins_amount.toLocaleString()} coins</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">₹</span>
+                      <span className="font-semibold">₹{review.amount_inr}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(review.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {review.user_confirmation_message && (
+                    <div className="mb-4 p-3 bg-muted/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Message:</strong> {review.user_confirmation_message}
+                      </p>
+                    </div>
+                  )}
+
+                  {review.status === 'pending_review' && (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => approvePayment(
+                          review.id, 
+                          review.profiles?.email || '', 
+                          review.coins_amount
+                        )}
+                        disabled={processing === review.id || !review.profiles?.email}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {processing === review.id ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Processing...
+                          </div>
+                        ) : (
+                          <>
+                            <CheckCircle className="w-4 h-4 mr-2" />
+                            Approve & Add Coins
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => rejectPayment(review.id)}
+                        disabled={processing === review.id}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AdminPayments;
