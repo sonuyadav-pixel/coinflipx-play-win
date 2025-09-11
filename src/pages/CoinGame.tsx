@@ -88,18 +88,15 @@ const CoinGame = () => {
     try {
       console.log('Fetching round stats for round:', currentRoundId);
       
-      const { data, error } = await supabase.functions.invoke('get-round-stats', {
-        body: { roundId: currentRoundId }
-      });
-
-      console.log('Round stats response:', { data, error });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
+      // Fetch hourly players count
+      const { data: hourlyData, error: hourlyError } = await supabase.functions.invoke('get-hourly-players');
+      
+      if (hourlyError) {
+        console.error('Supabase function error (hourly):', hourlyError);
+      } else {
+        setTotalPlayers(hourlyData.totalPlayers || 0);
       }
 
-      setTotalPlayers(data.totalPlayers);
     } catch (error) {
       console.error('Error fetching round stats:', error);
     }
@@ -392,7 +389,7 @@ const CoinGame = () => {
               <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto">
                 <p className="text-xl text-foreground">Place your bets!</p>
                 <p className="text-sm text-muted-foreground">
-                  Total Players Betting: {totalPlayers.toLocaleString()}
+                  Players Active (Last Hour): {totalPlayers.toLocaleString()}
                 </p>
 
                 {/* Recent Results */}
