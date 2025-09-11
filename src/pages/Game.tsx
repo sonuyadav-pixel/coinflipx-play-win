@@ -99,10 +99,8 @@ const Game = () => {
         {/* Coming Soon Content */}
         <div className="flex-1 flex flex-col items-center justify-center p-6">
           <div className="text-center max-w-2xl mx-auto">
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <CoinFlip size="md" className="coin-glow" />
-            <CoinFlip size="lg" className="mx-auto" />
-            <CoinFlip size="md" className="coin-glow" />
+          <div className="flex items-center justify-center mb-8">
+            <CoinFlip size="lg" className="coin-glow" />
           </div>
           
           <div className="flex items-center justify-center gap-3 mb-6">
