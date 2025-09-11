@@ -454,15 +454,19 @@ const CoinGame = () => {
                   transition={{ duration: 0.1 }}
                   className="flex flex-col items-center mb-8"
                 >
-                  <video
-                    autoPlay
-                    muted
-                    playsInline
-                    preload="auto"
-                    className="w-64 h-64 rounded-full object-cover"
-                  >
-                    <source src="/coin-toss.mp4" type="video/mp4" />
-                  </video>
+                  <div className="relative w-64 h-64 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 via-accent/30 to-primary/40 shadow-2xl border border-primary/30">
+                    <div className="absolute inset-0 bg-hero-gradient opacity-60"></div>
+                    <video
+                      autoPlay
+                      muted
+                      playsInline
+                      preload="auto"
+                      className="relative z-10 w-full h-full object-cover mix-blend-screen"
+                    >
+                      <source src="/coin-toss.mp4" type="video/mp4" />
+                    </video>
+                    <div className="absolute inset-0 sparkles pointer-events-none"></div>
+                  </div>
                   <p className="mt-4 text-lg text-muted-foreground">Flipping coin...</p>
                 </motion.div>
               )}
