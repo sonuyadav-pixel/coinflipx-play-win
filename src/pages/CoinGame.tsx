@@ -36,6 +36,8 @@ const CoinGame = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
+  // Loading state for transitions
+  const [showTransitionLoader, setShowTransitionLoader] = useState(false);
 
   // Derived state from server-managed game session
   const phase = gameState?.phase || 'betting';
@@ -43,7 +45,7 @@ const CoinGame = () => {
   const result = gameState?.result;
   const currentRoundId = gameState?.currentRoundId;
   const flipping = phase === 'flipping';
-  const maxTime = phase === 'betting' ? 60 : phase === 'flipping' ? 7 : phase === 'result' ? 30 : 3;
+  const maxTime = phase === 'betting' ? 30 : phase === 'flipping' ? 5 : phase === 'result' ? 5 : 3;
 
   console.log('CoinGame render:', { showCoinHistory, showBuyCoins });
   console.log('Current user coins:', userCoins);
@@ -78,6 +80,25 @@ const CoinGame = () => {
 
   // Track which round we've shown popup for to prevent duplicates
   const shownPopupForRound = useRef<string | null>(null);
+
+  // Handle transition loading for phase changes
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (phase === 'flipping') {
+      // Show loader briefly when flipping starts to smooth the transition
+      setShowTransitionLoader(true);
+      timeoutId = setTimeout(() => {
+        setShowTransitionLoader(false);
+      }, 800); // Show loader for 800ms
+    } else {
+      setShowTransitionLoader(false);
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [phase]);
 
   // Handle phase transitions and result display
   useEffect(() => {
@@ -424,9 +445,31 @@ const CoinGame = () => {
             )}
 
 
+            {/* Loading transition for phase changes */}
+            <AnimatePresence>
+              {showTransitionLoader && (
+                <motion.div
+                  key="transition-loader"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col items-center justify-center mb-8 h-48 md:h-64"
+                >
+                  <div className="relative">
+                    <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-accent rounded-full animate-spin" style={{ animationDelay: '0.15s' }}></div>
+                  </div>
+                  <p className="mt-4 text-base md:text-lg text-muted-foreground animate-pulse">
+                    Getting ready...
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Coin Flip Video Animation */}
             <AnimatePresence>
-              {phase === 'flipping' && (
+              {phase === 'flipping' && !showTransitionLoader && (
                 <motion.div
                   key="coin-flip-video"
                   initial={{ scale: 1, opacity: 1 }}
@@ -455,7 +498,7 @@ const CoinGame = () => {
 
             {/* Transition overlay for smooth flipping -> result */}
             <AnimatePresence>
-              {(phase === 'result' || phase === 'waiting') && !showPopup && (
+              {(phase === 'result' || phase === 'waiting') && !showPopup && !showTransitionLoader && (
                 <motion.div
                   key="transition-overlay"
                   initial={{ opacity: 0 }}
@@ -483,7 +526,7 @@ const CoinGame = () => {
             )}
 
             {/* Betting Phase */}
-            {!showPopup && !flipping && (
+            {!showPopup && !flipping && !showTransitionLoader && (
               <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto">
                 {!userBet && (
                   <p className="text-xl text-foreground">Place your bets!</p>
