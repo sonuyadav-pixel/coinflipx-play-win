@@ -82,17 +82,18 @@ const AdminPayments = () => {
         throw new Error('Payment review not found');
       }
 
-      // Get the actual email from auth token if profile email is null
-      const actualEmail = userEmail || 'sonu.yadav@jungleeegames.com';
+      console.log('Approving payment with:', { 
+        reviewId, 
+        targetUserId: reviewData.user_id, // This is the user who requested coins
+        coinsAmount 
+      });
       
-      console.log('Approving payment with:', { reviewId, actualEmail, coinsAmount });
-      
-      // Use admin-add-coins function to add coins
+      // Use admin-add-coins function - pass the requesting user's ID, not email
       const { data, error } = await supabase.functions.invoke('admin-add-coins', {
         body: {
-          email: actualEmail,
+          user_id: reviewData.user_id, // Use the requesting user's ID directly
           coinAmount: coinsAmount,
-          review_id: reviewId // Pass review ID for reference
+          review_id: reviewId
         }
       });
 
@@ -114,7 +115,7 @@ const AdminPayments = () => {
         throw new Error('Failed to add coins - no success response');
       }
 
-      console.log('Coins added successfully, new balance:', data.new_balance);
+      console.log('Coins added successfully to user:', reviewData.user_id, 'new balance:', data.new_balance);
 
       // Update review status to approved
       const { error: updateError } = await supabase
@@ -147,7 +148,7 @@ const AdminPayments = () => {
 
       toast({
         title: "Payment Approved! ✅",
-        description: `Added ${coinsAmount.toLocaleString()} coins. New balance: ${data.new_balance?.toLocaleString()}`,
+        description: `Added ${coinsAmount.toLocaleString()} coins to user's wallet. New balance: ${data.new_balance?.toLocaleString()}`,
         duration: 3000,
       });
 

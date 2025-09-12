@@ -24,29 +24,70 @@ serve(async (req) => {
     const body = await req.json();
     console.log('Request body:', body);
     
-    const { email, coinAmount, user_email, coin_amount } = body;
+    const { email, coinAmount, user_email, coin_amount, user_id } = body;
     
     // Accept both parameter formats for compatibility
     const userEmail = email || user_email;
     const coinsToAdd = coinAmount || coin_amount;
+    const targetUserId = user_id; // Direct user ID takes priority
     
-    if (!userEmail || !coinsToAdd) {
-      console.error('Missing parameters:', { userEmail, coinsToAdd });
+    if ((!userEmail && !targetUserId) || !coinsToAdd) {
+      console.error('Missing parameters:', { userEmail, targetUserId, coinsToAdd });
       return new Response(JSON.stringify({ 
-        error: 'Email and coinAmount are required',
-        received: { userEmail, coinsToAdd }
+        error: 'Either email or user_id, and coinAmount are required',
+        received: { userEmail, targetUserId, coinsToAdd }
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`Adding ${coinsToAdd} coins to user with email: ${userEmail}`);
+    let finalUserId = targetUserId;
 
-    // Call the admin function
+    // If user_id is provided directly, use it (most reliable)
+    if (targetUserId) {
+      console.log(`Using direct user ID: ${targetUserId} to add ${coinsToAdd} coins`);
+      finalUserId = targetUserId;
+    } else {
+      // Fallback to email lookup only if user_id not provided
+      console.log(`Looking up user by email: ${userEmail} to add ${coinsToAdd} coins`);
+
+      // First try to find user by email from profiles table
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('email', userEmail)
+        .single();
+      
+      if (profileData) {
+        finalUserId = profileData.user_id;
+      } else {
+        // If not found in profiles, check auth.users table
+        const { data: authData } = await supabase.auth.admin.listUsers();
+        const authUser = authData.users?.find(u => u.email === userEmail);
+        if (authUser) {
+          finalUserId = authUser.id;
+        }
+      }
+    }
+    
+    if (!finalUserId) {
+      console.error('User not found:', { userEmail, targetUserId });
+      return new Response(JSON.stringify({ 
+        error: `User not found with ${targetUserId ? 'user_id: ' + targetUserId : 'email: ' + userEmail}`
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Adding ${coinsToAdd} coins to user: ${finalUserId}`);
+
+    // Call the admin function with the correct user ID
     const { data, error } = await supabase.rpc('admin_add_coins', {
-      _user_email: userEmail,
-      _coin_amount: coinsToAdd
+      _user_email: userEmail || 'direct_user_id', // Fallback email for function compatibility
+      _coin_amount: coinsToAdd,
+      _user_id: finalUserId // Pass the actual user ID to ensure correct targeting
     });
 
     if (error) {
