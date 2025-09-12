@@ -119,7 +119,7 @@ export const useGameSession = () => {
         
         // If time reached 0, trigger session progress check
         if (newTimeLeft === 0 && prev.timeLeft > 0) {
-          setTimeout(() => checkSessionProgress(), 100);
+          setTimeout(() => checkSessionProgress(), 50);
         }
         
         return {

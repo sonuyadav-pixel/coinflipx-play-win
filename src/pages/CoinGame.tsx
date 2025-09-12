@@ -43,7 +43,7 @@ const CoinGame = () => {
   const result = gameState?.result;
   const currentRoundId = gameState?.currentRoundId;
   const flipping = phase === 'flipping';
-  const maxTime = phase === 'betting' ? 60 : phase === 'flipping' ? 7 : phase === 'result' ? 30 : 3;
+  const maxTime = phase === 'betting' ? 30 : phase === 'flipping' ? 5 : phase === 'result' ? 30 : 3;
 
   console.log('CoinGame render:', { showCoinHistory, showBuyCoins });
   console.log('Current user coins:', userCoins);
