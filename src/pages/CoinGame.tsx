@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CircleDollarSign, ArrowLeft, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -76,9 +76,15 @@ const CoinGame = () => {
     }
   }, [phase]);
 
+  // Track which round we've shown popup for to prevent duplicates
+  const shownPopupForRound = useRef<string | null>(null);
+
   // Handle phase transitions and result display
   useEffect(() => {
-    if (phase === 'result' && result) {
+    if (phase === 'result' && result && currentRoundId && shownPopupForRound.current !== currentRoundId) {
+      // Mark this round as having shown the popup
+      shownPopupForRound.current = currentRoundId;
+      
       // Check if user won and show result popup
       if (userBet) {
         const won = userBet.bet_side === result;
@@ -96,12 +102,13 @@ const CoinGame = () => {
       }
       
       setShowPopup(true);
+      setPopupTimer(5);
     } else if (phase !== 'result') {
       // Hide popup when not in result phase
       setShowPopup(false);
       setShowConfetti(false);
     }
-  }, [phase, result, userBet]);
+  }, [phase, result, currentRoundId, userBet]);
 
   // Clear user bet when new round starts
   useEffect(() => {
@@ -110,6 +117,8 @@ const CoinGame = () => {
       setUserWon(null);
       setWinAmount(0);
       setShowConfetti(false);
+      // Reset popup tracking for new round
+      shownPopupForRound.current = null;
     }
   }, [phase, currentRoundId]);
 
@@ -423,7 +432,7 @@ const CoinGame = () => {
                   initial={{ scale: 1, opacity: 1 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  transition={{ duration: 0.1 }}
+                  transition={{ duration: 0.3 }}
                   className="flex flex-col items-center mb-8"
                 >
                   <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 via-accent/30 to-primary/40 shadow-2xl border border-primary/30">
@@ -440,6 +449,26 @@ const CoinGame = () => {
                     <div className="absolute inset-0 sparkles pointer-events-none"></div>
                   </div>
                   <p className="mt-4 text-base md:text-lg text-muted-foreground">Flipping coin...</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Transition overlay for smooth flipping -> result */}
+            <AnimatePresence>
+              {(phase === 'result' || phase === 'waiting') && !showPopup && (
+                <motion.div
+                  key="transition-overlay"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex flex-col items-center justify-center mb-8 h-48 md:h-64"
+                >
+                  <div className="text-center">
+                    <p className="text-base md:text-lg text-muted-foreground">
+                      {phase === 'result' ? 'Preparing results...' : 'Next round starting...'}
+                    </p>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -591,12 +620,19 @@ const CoinGame = () => {
       {/* Result Popup */}
       <AnimatePresence>
         {showPopup && result && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-50 p-2 sm:p-4">
+          <motion.div
+            key="result-popup"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 flex items-center justify-center bg-background/95 z-50 p-2 sm:p-4"
+          >
             <motion.div
-              initial={{ scale: 0, opacity: 0 }}
+              initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ duration: 0.5, type: "spring" }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ duration: 0.3, type: "spring" }}
               className="glass-card p-4 sm:p-6 md:p-8 rounded-3xl shadow-2xl text-center max-w-sm sm:max-w-lg mx-auto relative w-full max-h-[90vh] overflow-y-auto"
             >
               {/* Close Button - disabled during result phase */}
@@ -711,7 +747,7 @@ const CoinGame = () => {
                 <span className="text-xs sm:text-sm text-center">Next game starts automatically</span>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
