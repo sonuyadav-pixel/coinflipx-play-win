@@ -352,7 +352,9 @@ export type Database = {
     }
     Functions: {
       admin_add_coins: {
-        Args: { _coin_amount: number; _user_email: string }
+        Args:
+          | { _coin_amount: number; _user_email: string }
+          | { _coin_amount: number; _user_email: string; _user_id?: string }
         Returns: Json
       }
       initialize_user_coins: {
