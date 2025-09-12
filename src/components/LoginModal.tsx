@@ -32,6 +32,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         title: "Error",
         description: "Please fill in all fields",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -41,6 +42,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         title: "Error",
         description: "Password must be at least 6 characters long",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -56,11 +58,13 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             title: "Error",
             description: error.message,
             variant: "destructive",
+            duration: 2000,
           });
         } else {
           toast({
             title: "Success!",
             description: "Account created! Please check your email to confirm your account.",
+            duration: 2000,
           });
           onClose();
         }
@@ -72,11 +76,13 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
             title: "Error",
             description: error.message,
             variant: "destructive",
+            duration: 2000,
           });
         } else {
           toast({
             title: "Success!",
             description: "Signed in successfully!",
+            duration: 2000,
           });
           onClose();
           navigate('/game');
@@ -87,6 +93,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         title: "Error",
         description: "An unexpected error occurred",
         variant: "destructive",
+        duration: 2000,
       });
     } finally {
       setLoading(false);
@@ -104,6 +111,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
           title: "Error",
           description: error.message,
           variant: "destructive",
+          duration: 2000,
         });
       }
       // Note: OAuth will redirect automatically, so we don't need to handle success here
@@ -112,6 +120,7 @@ const LoginModal = ({ isOpen, onClose }: LoginModalProps) => {
         title: "Error",
         description: "Failed to sign in with Google",
         variant: "destructive",
+        duration: 2000,
       });
     } finally {
       setLoading(false);

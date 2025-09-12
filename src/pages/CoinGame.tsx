@@ -102,7 +102,8 @@ const CoinGame = () => {
       toast({
         title: "Error",
         description: "Failed to create new round",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
     }
   };
@@ -171,7 +172,8 @@ const CoinGame = () => {
       toast({
         title: "Authentication Required",
         description: "Please log in to place bets",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -180,7 +182,8 @@ const CoinGame = () => {
       toast({
         title: "Betting Closed",
         description: "Betting period has ended",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -189,7 +192,8 @@ const CoinGame = () => {
       toast({
         title: "Already Bet",
         description: "You have already placed a bet for this round",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -206,7 +210,8 @@ const CoinGame = () => {
       toast({
         title: "Insufficient Coins",
         description: "You don't have enough coins to place this bet",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -245,6 +250,7 @@ const CoinGame = () => {
       toast({
         title: "Bet Placed!",
         description: `${amount} coins on ${selectedBetSide}`,
+        duration: 2000,
       });
       
     } catch (error: any) {
@@ -252,7 +258,8 @@ const CoinGame = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to place bet",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
     } finally {
       setIsPlacingBet(false);

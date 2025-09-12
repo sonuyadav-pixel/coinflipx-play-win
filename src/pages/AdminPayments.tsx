@@ -61,6 +61,7 @@ const AdminPayments = () => {
         title: "Error",
         description: "Failed to load payment reviews",
         variant: "destructive",
+        duration: 2000,
       });
     } finally {
       setLoading(false);
@@ -116,6 +117,7 @@ const AdminPayments = () => {
       toast({
         title: "Payment Approved! ✅",
         description: `Added ${coinsAmount} coins. New balance: ${data.new_balance}`,
+        duration: 2000,
       });
 
       // Refresh data
@@ -126,6 +128,7 @@ const AdminPayments = () => {
         title: "Error",
         description: "Failed to approve payment",
         variant: "destructive",
+        duration: 2000,
       });
     } finally {
       setProcessing(null);
@@ -147,6 +150,7 @@ const AdminPayments = () => {
       toast({
         title: "Payment Rejected",
         description: "Payment request has been rejected",
+        duration: 2000,
       });
 
       // Refresh data
@@ -157,6 +161,7 @@ const AdminPayments = () => {
         title: "Error",
         description: "Failed to reject payment",
         variant: "destructive",
+        duration: 2000,
       });
     } finally {
       setProcessing(null);

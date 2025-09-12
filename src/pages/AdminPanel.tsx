@@ -27,6 +27,7 @@ const AdminPanel = () => {
         title: "Error",
         description: "Please enter both email and coin amount",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -37,6 +38,7 @@ const AdminPanel = () => {
         title: "Error",
         description: "Coin amount must be greater than 0",
         variant: "destructive",
+        duration: 2000,
       });
       return;
     }
@@ -68,6 +70,7 @@ const AdminPanel = () => {
       toast({
         title: "Success",
         description: `Added ${amount} coins to ${email}`,
+        duration: 2000,
       });
 
       // Clear form
@@ -93,6 +96,7 @@ const AdminPanel = () => {
         title: "Error",
         description: error.message || "Failed to add coins",
         variant: "destructive",
+        duration: 2000,
       });
     } finally {
       setLoading(false);

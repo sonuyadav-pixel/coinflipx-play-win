@@ -65,12 +65,14 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
         toast({
           title: "Payment Initiated",
           description: `Scan QR code to pay ₹${priceINR} for ${coins} coins`,
+          duration: 2000,
         });
       } else {
         toast({
           title: "Error",
           description: "Failed to create payment transaction",
           variant: "destructive",
+          duration: 2000,
         });
       }
     } catch (error) {
@@ -78,6 +80,7 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
         title: "Error",
         description: "Something went wrong",
         variant: "destructive",
+        duration: 2000,
       });
     } finally {
       setProcessing(false);
@@ -116,6 +119,7 @@ const BuyCoinsModal = ({ isOpen, onClose }: BuyCoinsModalProps) => {
         title: "Error",
         description: "Failed to submit payment for review",
         variant: "destructive",
+        duration: 2000,
       });
     } finally {
       setProcessing(false);
