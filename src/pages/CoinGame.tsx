@@ -4,7 +4,6 @@ import { CircleDollarSign, ArrowLeft, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import CoinFlip from "@/components/CoinFlip";
-import CoinFlipLoader from "@/components/CoinFlipLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtimeCoins } from '@/hooks/useRealtimeCoins';
@@ -37,10 +36,6 @@ const CoinGame = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
-  // Loading states for smooth transitions
-  const [showBettingToFlipLoader, setShowBettingToFlipLoader] = useState(false);
-  const [showFlipToResultLoader, setShowFlipToResultLoader] = useState(false);
-  const [previousPhase, setPreviousPhase] = useState<string | null>(null);
 
   // Derived state from server-managed game session
   const phase = gameState?.phase || 'betting';
@@ -48,7 +43,7 @@ const CoinGame = () => {
   const result = gameState?.result;
   const currentRoundId = gameState?.currentRoundId;
   const flipping = phase === 'flipping';
-  const maxTime = phase === 'betting' ? 30 : phase === 'flipping' ? 5 : phase === 'result' ? 5 : 3;
+  const maxTime = phase === 'betting' ? 60 : phase === 'flipping' ? 7 : phase === 'result' ? 30 : 3;
 
   console.log('CoinGame render:', { showCoinHistory, showBuyCoins });
   console.log('Current user coins:', userCoins);
@@ -84,31 +79,9 @@ const CoinGame = () => {
   // Track which round we've shown popup for to prevent duplicates
   const shownPopupForRound = useRef<string | null>(null);
 
-  // Handle smooth phase transitions with loaders
-  useEffect(() => {
-    if (previousPhase !== phase) {
-      // Betting → Flipping transition
-      if (previousPhase === 'betting' && phase === 'flipping') {
-        setShowBettingToFlipLoader(true);
-      }
-      
-      // Flipping → Result transition (when result becomes available)
-      if (previousPhase === 'flipping' && phase === 'result' && result) {
-        setShowFlipToResultLoader(true);
-      }
-      
-      setPreviousPhase(phase);
-    }
-  }, [phase, previousPhase, result]);
-
   // Handle phase transitions and result display
   useEffect(() => {
     if (phase === 'result' && result && currentRoundId && shownPopupForRound.current !== currentRoundId) {
-      // If we're showing the flip-to-result loader, delay the popup
-      if (showFlipToResultLoader) {
-        return; // Don't show popup yet, wait for loader to complete
-      }
-      
       // Mark this round as having shown the popup
       shownPopupForRound.current = currentRoundId;
       
@@ -135,7 +108,7 @@ const CoinGame = () => {
       setShowPopup(false);
       setShowConfetti(false);
     }
-  }, [phase, result, currentRoundId, userBet, showFlipToResultLoader]);
+  }, [phase, result, currentRoundId, userBet]);
 
   // Clear user bet when new round starts
   useEffect(() => {
@@ -146,43 +119,8 @@ const CoinGame = () => {
       setShowConfetti(false);
       // Reset popup tracking for new round
       shownPopupForRound.current = null;
-      // Clear all loaders when new betting phase starts
-      setShowBettingToFlipLoader(false);
-      setShowFlipToResultLoader(false);
     }
   }, [phase, currentRoundId]);
-
-  // Loader completion handlers
-  const handleBettingToFlipLoaderComplete = () => {
-    setShowBettingToFlipLoader(false);
-  };
-
-  const handleFlipToResultLoaderComplete = () => {
-    setShowFlipToResultLoader(false);
-    
-    // Now show the result popup if we have the result
-    if (phase === 'result' && result && currentRoundId && shownPopupForRound.current !== currentRoundId) {
-      shownPopupForRound.current = currentRoundId;
-      
-      if (userBet) {
-        const won = userBet.bet_side === result;
-        setUserWon(won);
-        if (won) {
-          setWinAmount(parseFloat(userBet.coin_amount || userBet.bet_amount) * 2);
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 5000);
-        } else {
-          setWinAmount(0);
-        }
-      } else {
-        setUserWon(null);
-        setWinAmount(0);
-      }
-      
-      setShowPopup(true);
-      setPopupTimer(5);
-    }
-  };
 
   const fetchRoundStats = async () => {
     if (!currentRoundId) return;
@@ -486,29 +424,9 @@ const CoinGame = () => {
             )}
 
 
-            {/* Betting to Flipping Loader */}
-            <AnimatePresence>
-              {showBettingToFlipLoader && (
-                <motion.div
-                  key="betting-to-flip-loader"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex flex-col items-center justify-center mb-8 h-48 md:h-64"
-                >
-                  <CoinFlipLoader
-                    message="Starting coin flip..."
-                    onComplete={handleBettingToFlipLoaderComplete}
-                    duration={1200}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {/* Coin Flip Video Animation */}
             <AnimatePresence>
-              {phase === 'flipping' && !showBettingToFlipLoader && (
+              {phase === 'flipping' && (
                 <motion.div
                   key="coin-flip-video"
                   initial={{ scale: 1, opacity: 1 }}
@@ -535,29 +453,9 @@ const CoinGame = () => {
               )}
             </AnimatePresence>
 
-            {/* Flipping to Result Loader */}
-            <AnimatePresence>
-              {showFlipToResultLoader && (
-                <motion.div
-                  key="flip-to-result-loader"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex flex-col items-center justify-center mb-8 h-48 md:h-64"
-                >
-                  <CoinFlipLoader
-                    message="Revealing result..."
-                    onComplete={handleFlipToResultLoaderComplete}
-                    duration={1000}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {/* Transition overlay for smooth flipping -> result */}
             <AnimatePresence>
-              {(phase === 'result' || phase === 'waiting') && !showPopup && !showFlipToResultLoader && (
+              {(phase === 'result' || phase === 'waiting') && !showPopup && (
                 <motion.div
                   key="transition-overlay"
                   initial={{ opacity: 0 }}
@@ -585,7 +483,7 @@ const CoinGame = () => {
             )}
 
             {/* Betting Phase */}
-            {!showPopup && !flipping && !showBettingToFlipLoader && !showFlipToResultLoader && (
+            {!showPopup && !flipping && (
               <div className="flex flex-col items-center gap-8 w-full max-w-lg mx-auto">
                 {!userBet && (
                   <p className="text-xl text-foreground">Place your bets!</p>
