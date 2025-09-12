@@ -400,10 +400,10 @@ const CoinGame = () => {
               onClick={() => setShowCoinHistory(true)}
               className="flex items-center gap-1 sm:gap-2 glass-card px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer min-w-0 shrink-0"
             >
-              <Coins className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
+              <Coins className="w-4 h-4 sm:w-4 sm:h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
               <div className="text-right min-w-0">
-                <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground hidden xs:block">Your Coins</p>
-                <p className="text-xs sm:text-sm md:text-lg font-bold text-primary truncate">{Math.floor(userCoins.balance).toLocaleString()}</p>
+                <p className="text-xs sm:text-xs md:text-sm text-muted-foreground">Coins</p>
+                <p className="text-sm sm:text-sm md:text-lg font-bold text-primary truncate">{Math.floor(userCoins.balance).toLocaleString()}</p>
               </div>
             </button>
           )}
