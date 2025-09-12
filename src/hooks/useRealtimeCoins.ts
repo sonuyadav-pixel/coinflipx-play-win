@@ -55,7 +55,7 @@ export const useRealtimeCoins = () => {
     fetchUserCoins();
 
     // Set up real-time subscription for user_coins table
-    const channel = supabase
+    const coinsChannel = supabase
       .channel(`user-coins-${user.id}`)
       .on(
         'postgres_changes',
@@ -86,7 +86,7 @@ export const useRealtimeCoins = () => {
         }
       )
       .subscribe((status) => {
-        console.log('Subscription status:', status);
+        console.log('Coins subscription status:', status);
         if (status === 'SUBSCRIBED') {
           console.log('Successfully subscribed to real-time coin updates');
         } else if (status === 'CHANNEL_ERROR') {
@@ -98,10 +98,41 @@ export const useRealtimeCoins = () => {
         }
       });
 
-    // Cleanup subscription on unmount
+    // Set up real-time subscription for payment reviews to catch status updates
+    const paymentChannel = supabase
+      .channel(`payment-reviews-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public', 
+          table: 'admin_payment_reviews',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Payment review status update:', payload);
+          
+          // Trigger custom events based on status changes
+          if (payload.new?.status === 'approved') {
+            window.dispatchEvent(new CustomEvent('paymentApproved', { 
+              detail: payload.new 
+            }));
+          } else if (payload.new?.status === 'rejected') {
+            window.dispatchEvent(new CustomEvent('paymentRejected', { 
+              detail: payload.new 
+            }));
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Payment reviews subscription status:', status);
+      });
+
+    // Cleanup subscriptions on unmount
     return () => {
-      console.log('Unsubscribing from real-time coin updates');
-      supabase.removeChannel(channel);
+      console.log('Unsubscribing from real-time updates');
+      supabase.removeChannel(coinsChannel);
+      supabase.removeChannel(paymentChannel);
     };
   }, [user?.id]);
 
