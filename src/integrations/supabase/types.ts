@@ -145,6 +145,51 @@ export type Database = {
         }
         Relationships: []
       }
+      game_sessions: {
+        Row: {
+          betting_duration_seconds: number
+          created_at: string
+          current_round_id: string | null
+          flipping_duration_seconds: number
+          id: string
+          is_active: boolean
+          phase: string
+          phase_ends_at: string
+          phase_started_at: string
+          result_duration_seconds: number
+          updated_at: string
+          waiting_duration_seconds: number
+        }
+        Insert: {
+          betting_duration_seconds?: number
+          created_at?: string
+          current_round_id?: string | null
+          flipping_duration_seconds?: number
+          id?: string
+          is_active?: boolean
+          phase?: string
+          phase_ends_at: string
+          phase_started_at?: string
+          result_duration_seconds?: number
+          updated_at?: string
+          waiting_duration_seconds?: number
+        }
+        Update: {
+          betting_duration_seconds?: number
+          created_at?: string
+          current_round_id?: string | null
+          flipping_duration_seconds?: number
+          id?: string
+          is_active?: boolean
+          phase?: string
+          phase_ends_at?: string
+          phase_started_at?: string
+          result_duration_seconds?: number
+          updated_at?: string
+          waiting_duration_seconds?: number
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           admin_notes: string | null

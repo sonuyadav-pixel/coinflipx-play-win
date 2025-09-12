@@ -85,3 +85,9 @@ verify_jwt = false
 
 [functions.verify-code]
 verify_jwt = false
+
+[functions.game-session-manager]
+verify_jwt = false
+
+[functions.get-game-state]
+verify_jwt = false

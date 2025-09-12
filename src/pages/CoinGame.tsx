@@ -7,6 +7,7 @@ import CoinFlip from "@/components/CoinFlip";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRealtimeCoins } from '@/hooks/useRealtimeCoins';
+import { useGameSession } from '@/hooks/useGameSession';
 import { toast } from "@/hooks/use-toast";
 import BettingPopup from "@/components/BettingPopup";
 import CoinHistoryModal from "@/components/CoinHistoryModal";
@@ -16,19 +17,16 @@ import Confetti from "react-confetti";
 const CoinGame = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { userCoins, refreshCoins } = useRealtimeCoins(); // Use real-time coin updates with manual refresh
-  const [phase, setPhase] = useState("bet");
-  const [timeLeft, setTimeLeft] = useState(60);
-  const [result, setResult] = useState<string | null>(null);
+  const { userCoins, refreshCoins } = useRealtimeCoins();
+  const { gameState, loading: gameLoading, error: gameError } = useGameSession();
+  
+  // Local state for UI management
   const [showPopup, setShowPopup] = useState(false);
-  const [flipping, setFlipping] = useState(false);
-  const [maxTime, setMaxTime] = useState(60);
   const [headsPercent, setHeadsPercent] = useState(50);
   const [tailsPercent, setTailsPercent] = useState(50);
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [recentResults, setRecentResults] = useState<string[]>([]);
   const [popupTimer, setPopupTimer] = useState(30);
-  const [currentRoundId, setCurrentRoundId] = useState<string | null>(null);
   const [userBet, setUserBet] = useState<any>(null);
   const [showBettingPopup, setShowBettingPopup] = useState(false);
   const [selectedBetSide, setSelectedBetSide] = useState<'Heads' | 'Tails'>('Heads');
@@ -38,6 +36,14 @@ const CoinGame = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
+
+  // Derived state from server-managed game session
+  const phase = gameState?.phase || 'betting';
+  const timeLeft = gameState?.timeLeft || 0;
+  const result = gameState?.result;
+  const currentRoundId = gameState?.currentRoundId;
+  const flipping = phase === 'flipping';
+  const maxTime = phase === 'betting' ? 60 : phase === 'flipping' ? 7 : phase === 'result' ? 30 : 3;
 
   console.log('CoinGame render:', { showCoinHistory, showBuyCoins });
   console.log('Current user coins:', userCoins);
@@ -54,59 +60,55 @@ const CoinGame = () => {
     }
   }, [userCoins]);
 
-  // Create new round when component mounts
-  useEffect(() => {
-    createNewRound();
-  }, [user]);
-
   // Update round stats and historical data periodically
   useEffect(() => {
-    if (currentRoundId && phase === "bet") {
-      const interval = setInterval(() => {
+    if (phase === 'betting') {
       fetchRoundStats();
       fetchHistoricalStats();
       fetchRecentResults();
-      }, 2000);
+      
+      const interval = setInterval(() => {
+        fetchRoundStats();
+        fetchHistoricalStats();
+        fetchRecentResults();
+      }, 5000);
       return () => clearInterval(interval);
     }
-  }, [currentRoundId, phase]);
+  }, [phase]);
 
-  const createNewRound = async () => {
-    try {
-      console.log('Creating new round...');
-      
-      const { data, error } = await supabase.functions.invoke('create-round', {
-        body: { bettingDurationSeconds: 60 }
-      });
-
-      console.log('Create round response:', { data, error });
-
-      if (error) {
-        console.error('Supabase function error:', error);
-        throw error;
+  // Handle phase transitions and result display
+  useEffect(() => {
+    if (phase === 'result' && result && !showPopup) {
+      // Check if user won and show result popup
+      if (userBet) {
+        const won = userBet.bet_side === result;
+        setUserWon(won);
+        if (won) {
+          setWinAmount(parseFloat(userBet.coin_amount || userBet.bet_amount) * 2);
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 5000);
+        } else {
+          setWinAmount(0);
+        }
+      } else {
+        setUserWon(null);
+        setWinAmount(0);
       }
-
-      setCurrentRoundId(data.round.id);
-      setTimeLeft(60);
-      setMaxTime(60);
-      setPhase("bet");
-      setUserBet(null);
       
-      // Fetch initial historical data
-      fetchHistoricalStats();
-      fetchRecentResults();
-      
-      console.log('New round created with ID:', data.round.id);
-    } catch (error) {
-      console.error('Error creating round:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create new round",
-        variant: "destructive",
-        duration: 2000,
-      });
+      setShowPopup(true);
+      setPopupTimer(30);
     }
-  };
+  }, [phase, result, userBet, showPopup]);
+
+  // Clear user bet when new round starts
+  useEffect(() => {
+    if (phase === 'betting' && currentRoundId) {
+      setUserBet(null);
+      setUserWon(null);
+      setWinAmount(0);
+      setShowConfetti(false);
+    }
+  }, [phase, currentRoundId]);
 
   const fetchRoundStats = async () => {
     if (!currentRoundId) return;
@@ -178,7 +180,7 @@ const CoinGame = () => {
       return;
     }
 
-    if (timeLeft <= 0) {
+    if (phase !== 'betting' || timeLeft <= 0) {
       toast({
         title: "Betting Closed",
         description: "Betting period has ended",
@@ -266,73 +268,15 @@ const CoinGame = () => {
     }
   };
 
-  const finalizeCoinFlip = async (coinResult: string) => {
-    if (!currentRoundId) return;
-
-    try {
-      console.log('Finalizing coin flip with result:', coinResult);
-      
-      const { data, error } = await supabase.functions.invoke('finalize-round', {
-        body: {
-          roundId: currentRoundId,
-          result: coinResult
-        }
-      });
-
-      if (error) {
-        console.error('Error finalizing round:', error);
-        throw error;
-      }
-      
-      console.log('Round finalized successfully:', data);
-      
-      // Refresh coin balance after winnings are processed
-      if (userWon) {
-        console.log('User won, refreshing coin balance...');
-        setTimeout(() => {
-          refreshCoins();
-        }, 500); // Give a bit more time for DB updates
-      }
-      
-    } catch (error) {
-      console.error('Error finalizing round:', error);
-    }
-  };
-
+  // Handle coin balance refresh after winnings
   useEffect(() => {
-    if (timeLeft === 0) {
-      // Start coin flip animation
-      setFlipping(true);
+    if (userWon && phase === 'result') {
+      console.log('User won, refreshing coin balance...');
       setTimeout(() => {
-        const coin = Math.random() < 0.5 ? "Heads" : "Tails";
-        setResult(coin);
-        setFlipping(false);
-        
-        // Check if user won
-        if (userBet) {
-          const won = userBet.bet_side === coin;
-          setUserWon(won);
-          if (won) {
-            setWinAmount(parseFloat(userBet.coin_amount || userBet.bet_amount) * 2);
-            setShowConfetti(true);
-            setTimeout(() => setShowConfetti(false), 5000);
-          } else {
-            setWinAmount(0);
-          }
-        } else {
-          setUserWon(null);
-          setWinAmount(0);
-        }
-        
-        setShowPopup(true);
-        setPopupTimer(30);
-        finalizeCoinFlip(coin);
-      }, 7000); // Video duration
-    } else {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-      return () => clearTimeout(timer);
+        refreshCoins();
+      }, 1000);
     }
-  }, [timeLeft]);
+  }, [userWon, phase, refreshCoins]);
 
   // Popup timer effect
   useEffect(() => {
@@ -346,12 +290,10 @@ const CoinGame = () => {
 
   const handleClosePopup = () => {
     setShowPopup(false);
-    setResult(null);
     setPopupTimer(30);
     setUserWon(null);
     setWinAmount(0);
     setShowConfetti(false);
-    createNewRound(); // Start new round
   };
 
   const handleBackToLobby = () => {
@@ -422,11 +364,14 @@ const CoinGame = () => {
             
             {/* Phase Title */}
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-6 md:mb-8">
-              {timeLeft > 0 ? "Betting Phase" : "Coin Flipping"}
+              {phase === 'betting' ? 'Betting Phase' : 
+               phase === 'flipping' ? 'Coin Flipping' : 
+               phase === 'result' ? 'Results' : 
+               'Next Round Starting'}
             </h1>
 
-            {/* Timer with circular progress - only show during betting */}
-            {timeLeft > 0 && (
+            {/* Timer with circular progress - show for all phases */}
+            {phase !== 'result' && timeLeft > 0 && (
               <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 flex items-center justify-center mb-4 sm:mb-6 md:mb-8 mx-auto">
                 <svg className="absolute top-0 left-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
                   <circle
@@ -465,7 +410,7 @@ const CoinGame = () => {
 
             {/* Coin Flip Video Animation */}
             <AnimatePresence>
-              {flipping && (
+              {phase === 'flipping' && (
                 <motion.div
                   key="coin-flip-video"
                   initial={{ scale: 1, opacity: 1 }}
@@ -493,7 +438,7 @@ const CoinGame = () => {
             </AnimatePresence>
 
             {/* User Bet Status */}
-            {userBet && !showPopup && !flipping && (
+            {userBet && !showPopup && phase === 'betting' && (
               <div className="mb-6 p-4 glass-card rounded-lg border border-green-500">
                 <p className="text-green-400 text-center font-semibold">
                   ✅ Bet placed: {Math.floor(parseFloat(userBet.coin_amount || userBet.bet_amount))} coins on {userBet.bet_side}
@@ -562,38 +507,40 @@ const CoinGame = () => {
                 </div>
 
 
-                {/* Betting Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 w-full max-w-sm sm:max-w-none">
-                  <motion.div whileTap={{ scale: 0.95 }} className="flex-1">
-                    <Button 
-                      onClick={() => handleBetClick('Heads')}
-                      disabled={!!userBet || timeLeft <= 0}
-                      className={`w-full px-3 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-bold shadow-lg flex items-center justify-center gap-2 ${
-                        userBet || timeLeft <= 0 
-                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                          : 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black'
-                      }`}
-                    >
-                      <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="truncate">Bet on Heads</span>
-                    </Button>
-                  </motion.div>
-                  
-                  <motion.div whileTap={{ scale: 0.95 }} className="flex-1">
-                    <Button 
-                      onClick={() => handleBetClick('Tails')}
-                      disabled={!!userBet || timeLeft <= 0}
-                      className={`w-full px-3 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-bold shadow-lg flex items-center justify-center gap-2 ${
-                        userBet || timeLeft <= 0 
-                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
-                          : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
-                      }`}
-                    >
-                      <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="truncate">Bet on Tails</span>
-                    </Button>
-                  </motion.div>
-                </div>
+            {/* Betting Buttons - only show during betting phase */}
+            {!userBet && phase === 'betting' && timeLeft > 0 && (
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 w-full max-w-sm sm:max-w-none">
+                <motion.div whileTap={{ scale: 0.95 }} className="flex-1">
+                  <Button 
+                    onClick={() => handleBetClick('Heads')}
+                    disabled={!!userBet || timeLeft <= 0}
+                    className={`w-full px-3 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-bold shadow-lg flex items-center justify-center gap-2 ${
+                      userBet || timeLeft <= 0 
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black'
+                    }`}
+                  >
+                    <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="truncate">Bet on Heads</span>
+                  </Button>
+                </motion.div>
+                
+                <motion.div whileTap={{ scale: 0.95 }} className="flex-1">
+                  <Button 
+                    onClick={() => handleBetClick('Tails')}
+                    disabled={!!userBet || timeLeft <= 0}
+                    className={`w-full px-3 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-bold shadow-lg flex items-center justify-center gap-2 ${
+                      userBet || timeLeft <= 0 
+                        ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                    }`}
+                  >
+                    <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="truncate">Bet on Tails</span>
+                  </Button>
+                </motion.div>
+              </div>
+            )}
               </div>
             )}
           </div>
