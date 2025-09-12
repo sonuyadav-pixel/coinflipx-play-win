@@ -47,6 +47,19 @@ const CoinHistoryModal: React.FC<CoinHistoryModalProps> = ({
     }
   }, [isOpen, user]);
 
+  // Listen for coin updates and refresh transactions
+  useEffect(() => {
+    const handleCoinsUpdated = () => {
+      if (isOpen) {
+        console.log('Coins updated, refreshing transactions...');
+        fetchTransactions();
+      }
+    };
+
+    window.addEventListener('coinsUpdated', handleCoinsUpdated);
+    return () => window.removeEventListener('coinsUpdated', handleCoinsUpdated);
+  }, [isOpen]);
+
   const fetchTransactions = async () => {
     if (!user) return;
 

@@ -58,8 +58,20 @@ serve(async (req) => {
       });
     }
 
-    // Format transactions for display
-    const allTransactions = coinTransactions?.map(transaction => {
+    // Get pending payment reviews to show as "under review" transactions
+    const { data: pendingPayments, error: pendingError } = await supabase
+      .from('admin_payment_reviews')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('status', 'pending_review')
+      .order('created_at', { ascending: false });
+
+    if (pendingError) {
+      console.error('Error fetching pending payments:', pendingError);
+    }
+
+    // Format coin transactions for display
+    const formattedCoinTransactions = coinTransactions?.map(transaction => {
       return {
         id: transaction.id,
         type: transaction.type,
@@ -74,6 +86,29 @@ serve(async (req) => {
         amount_inr: transaction.metadata?.amount_inr || null
       };
     }) || [];
+
+    // Format pending payments as transactions  
+    const formattedPendingPayments = pendingPayments?.map(payment => {
+      return {
+        id: payment.id,
+        type: 'purchase_pending',
+        amount: 0, // Amount will be added when approved
+        description: `Payment under review - ${payment.coins_amount.toLocaleString()} coins (₹${payment.amount_inr})`,
+        bet_side: null,
+        result: null,
+        created_at: payment.created_at,
+        ended_at: payment.created_at,
+        category: 'payment',
+        status: 'pending_review',
+        amount_inr: payment.amount_inr,
+        coins_amount: payment.coins_amount
+      };
+    }) || [];
+
+    // Combine and sort all transactions
+    const allTransactions = [...formattedCoinTransactions, ...formattedPendingPayments].sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
 
     // Check if user needs welcome bonus transaction
     const { data: userCoins } = await supabase

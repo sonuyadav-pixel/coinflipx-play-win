@@ -74,6 +74,9 @@ export const useRealtimeCoins = () => {
               const newCoins = payload.new as UserCoins;
               console.log('Setting new coins:', newCoins);
               setUserCoins(newCoins);
+              
+              // Trigger a custom event so other components can refresh
+              window.dispatchEvent(new CustomEvent('coinsUpdated', { detail: newCoins }));
             }
           } else if (payload.eventType === 'DELETE') {
             // Handle deletion (shouldn't happen often)
