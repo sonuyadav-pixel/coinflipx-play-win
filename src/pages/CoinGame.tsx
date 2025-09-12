@@ -78,7 +78,7 @@ const CoinGame = () => {
 
   // Handle phase transitions and result display
   useEffect(() => {
-    if (phase === 'result' && result && !showPopup) {
+    if (phase === 'result' && result) {
       // Check if user won and show result popup
       if (userBet) {
         const won = userBet.bet_side === result;
@@ -96,9 +96,12 @@ const CoinGame = () => {
       }
       
       setShowPopup(true);
-      setPopupTimer(5);
+    } else if (phase !== 'result') {
+      // Hide popup when not in result phase
+      setShowPopup(false);
+      setShowConfetti(false);
     }
-  }, [phase, result, userBet, showPopup]);
+  }, [phase, result, userBet]);
 
   // Clear user bet when new round starts
   useEffect(() => {
@@ -278,22 +281,26 @@ const CoinGame = () => {
     }
   }, [userWon, phase, refreshCoins]);
 
-  // Popup timer effect
+  // Popup timer effect - now synced with server phase timing
   useEffect(() => {
-    if (showPopup && popupTimer > 0) {
+    if (showPopup && phase === 'result' && popupTimer > 0) {
       const timer = setTimeout(() => setPopupTimer(popupTimer - 1), 1000);
       return () => clearTimeout(timer);
-    } else if (showPopup && popupTimer === 0) {
-      handleClosePopup();
+    } else if (phase === 'result' && timeLeft > 0) {
+      // Sync popup timer with server phase time
+      setPopupTimer(timeLeft);
     }
-  }, [showPopup, popupTimer]);
+  }, [showPopup, popupTimer, phase, timeLeft]);
 
   const handleClosePopup = () => {
-    setShowPopup(false);
-    setPopupTimer(5);
-    setUserWon(null);
-    setWinAmount(0);
-    setShowConfetti(false);
+    // Only allow manual close if not in result phase
+    if (phase !== 'result') {
+      setShowPopup(false);
+      setPopupTimer(5);
+      setUserWon(null);
+      setWinAmount(0);
+      setShowConfetti(false);
+    }
   };
 
   const handleBackToLobby = () => {
@@ -592,13 +599,15 @@ const CoinGame = () => {
               transition={{ duration: 0.5, type: "spring" }}
               className="glass-card p-4 sm:p-6 md:p-8 rounded-3xl shadow-2xl text-center max-w-sm sm:max-w-lg mx-auto relative w-full max-h-[90vh] overflow-y-auto"
             >
-              {/* Close Button */}
-              <button
-                onClick={handleClosePopup}
-                className="absolute top-3 sm:top-4 right-3 sm:right-4 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-muted/20 hover:bg-muted/40 flex items-center justify-center transition-colors text-sm sm:text-base"
-              >
-                ✕
-              </button>
+              {/* Close Button - disabled during result phase */}
+              {phase !== 'result' && (
+                <button
+                  onClick={handleClosePopup}
+                  className="absolute top-3 sm:top-4 right-3 sm:right-4 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-muted/20 hover:bg-muted/40 flex items-center justify-center transition-colors text-sm sm:text-base"
+                >
+                  ✕
+                </button>
+              )}
 
               {/* Result Header */}
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-4 sm:mb-6">
@@ -669,9 +678,10 @@ const CoinGame = () => {
                   onClick={handleClosePopup}
                   variant="hero"
                   size="lg"
+                  disabled={phase === 'result'}
                   className="w-full text-sm sm:text-base md:text-lg font-semibold py-2 sm:py-3"
                 >
-                  Restart Game in {popupTimer}s
+                  {phase === 'result' ? `Next Round in ${popupTimer}s` : 'Continue Playing'}
                 </Button>
                 
                 <Button
@@ -690,7 +700,7 @@ const CoinGame = () => {
                   <motion.div
                     className="absolute inset-0 rounded-full"
                     style={{
-                      background: `conic-gradient(hsl(var(--primary)) ${(30 - popupTimer) * 12}deg, transparent 0deg)`,
+                      background: `conic-gradient(hsl(var(--primary)) ${(5 - popupTimer) * 72}deg, transparent 0deg)`,
                       borderRadius: '50%'
                     }}
                   />
