@@ -526,61 +526,63 @@ const CoinGame = () => {
 
                 {/* Historical Percentage Bar */}
                 <div className="w-full flex flex-col gap-2">
-                  <p className="text-sm text-muted-foreground text-center">
+                  <p className="text-xs sm:text-sm text-muted-foreground text-center">
                     Last 10 Results: {headsPercent}% Heads, {tailsPercent}% Tails
                   </p>
-                  <div className="w-full glass-card rounded-full h-8 overflow-hidden flex">
+                  <div className="w-full glass-card rounded-full h-6 sm:h-8 overflow-hidden flex">
                     <motion.div
-                      className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-8 text-black font-bold flex items-center justify-center text-sm"
+                      className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-full text-black font-bold flex items-center justify-center text-xs sm:text-sm"
                       style={{ width: `${headsPercent}%` }}
                       initial={{ width: 0 }}
                       animate={{ width: `${headsPercent}%` }}
                       transition={{ duration: 0.5 }}
                     >
-                      {headsPercent}% Heads
+                      <span className="hidden sm:inline">{headsPercent}% Heads</span>
+                      <span className="sm:hidden">{headsPercent}%</span>
                     </motion.div>
                     <motion.div
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-8 text-white font-bold flex items-center justify-center text-sm"
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-full text-white font-bold flex items-center justify-center text-xs sm:text-sm"
                       style={{ width: `${tailsPercent}%` }}
                       initial={{ width: 0 }}
                       animate={{ width: `${tailsPercent}%` }}
                       transition={{ duration: 0.5 }}
                     >
-                      {tailsPercent}% Tails
+                      <span className="hidden sm:inline">{tailsPercent}% Tails</span>
+                      <span className="sm:hidden">{tailsPercent}%</span>
                     </motion.div>
                   </div>
                 </div>
 
 
                 {/* Betting Buttons */}
-                <div className="flex gap-6">
-                  <motion.div whileTap={{ scale: 0.95 }}>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 w-full max-w-sm sm:max-w-none">
+                  <motion.div whileTap={{ scale: 0.95 }} className="flex-1">
                     <Button 
                       onClick={() => handleBetClick('Heads')}
                       disabled={!!userBet || timeLeft <= 0}
-                      className={`px-8 py-4 text-lg font-bold shadow-lg flex items-center gap-2 ${
+                      className={`w-full px-3 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-bold shadow-lg flex items-center justify-center gap-2 ${
                         userBet || timeLeft <= 0 
                           ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
                           : 'bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-black'
                       }`}
                     >
-                  <Coins className="w-5 h-5" />
-                  Bet on Heads
-                </Button>
+                      <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="truncate">Bet on Heads</span>
+                    </Button>
                   </motion.div>
                   
-                  <motion.div whileTap={{ scale: 0.95 }}>
+                  <motion.div whileTap={{ scale: 0.95 }} className="flex-1">
                     <Button 
                       onClick={() => handleBetClick('Tails')}
                       disabled={!!userBet || timeLeft <= 0}
-                      className={`px-8 py-4 text-lg font-bold shadow-lg flex items-center gap-2 ${
+                      className={`w-full px-3 sm:px-6 md:px-8 py-3 sm:py-4 text-sm sm:text-base md:text-lg font-bold shadow-lg flex items-center justify-center gap-2 ${
                         userBet || timeLeft <= 0 
                           ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
                           : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                       }`}
                     >
-                      <Coins className="w-5 h-5" />
-                      Bet on Tails
+                      <Coins className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="truncate">Bet on Tails</span>
                     </Button>
                   </motion.div>
                 </div>
