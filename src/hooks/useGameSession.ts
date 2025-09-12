@@ -105,10 +105,10 @@ export const useGameSession = () => {
         console.log('Game session subscription status:', status);
       });
 
-    // Set up periodic session progress checks
+    // Set up periodic session progress checks (reduced interval for smoother experience)
     const progressInterval = setInterval(() => {
       checkSessionProgress();
-    }, 5000); // Check every 5 seconds
+    }, 2000); // Check every 2 seconds instead of 5
 
     // Set up countdown timer
     const timerInterval = setInterval(() => {

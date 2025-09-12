@@ -26,7 +26,7 @@ const CoinGame = () => {
   const [tailsPercent, setTailsPercent] = useState(50);
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [recentResults, setRecentResults] = useState<string[]>([]);
-  const [popupTimer, setPopupTimer] = useState(30);
+  const [popupTimer, setPopupTimer] = useState(5);
   const [userBet, setUserBet] = useState<any>(null);
   const [showBettingPopup, setShowBettingPopup] = useState(false);
   const [selectedBetSide, setSelectedBetSide] = useState<'Heads' | 'Tails'>('Heads');
@@ -96,7 +96,7 @@ const CoinGame = () => {
       }
       
       setShowPopup(true);
-      setPopupTimer(30);
+      setPopupTimer(5);
     }
   }, [phase, result, userBet, showPopup]);
 
@@ -290,7 +290,7 @@ const CoinGame = () => {
 
   const handleClosePopup = () => {
     setShowPopup(false);
-    setPopupTimer(30);
+    setPopupTimer(5);
     setUserWon(null);
     setWinAmount(0);
     setShowConfetti(false);
@@ -370,8 +370,8 @@ const CoinGame = () => {
                'Next Round Starting'}
             </h1>
 
-            {/* Timer with circular progress - show for all phases */}
-            {phase !== 'result' && timeLeft > 0 && (
+            {/* Timer with circular progress - only show during betting phase */}
+            {phase === 'betting' && timeLeft > 0 && (
               <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 flex items-center justify-center mb-4 sm:mb-6 md:mb-8 mx-auto">
                 <svg className="absolute top-0 left-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
                   <circle
