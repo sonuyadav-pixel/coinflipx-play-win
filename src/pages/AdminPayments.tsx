@@ -71,6 +71,17 @@ const AdminPayments = () => {
   const approvePayment = async (reviewId: string, userEmail: string, coinsAmount: number) => {
     setProcessing(reviewId);
     try {
+      // Get the payment review details first
+      const { data: reviewData, error: reviewError } = await supabase
+        .from('admin_payment_reviews')
+        .select('*')
+        .eq('id', reviewId)
+        .single();
+
+      if (reviewError || !reviewData) {
+        throw new Error('Payment review not found');
+      }
+
       // Get the actual email from auth token if profile email is null
       const actualEmail = userEmail || 'sonu.yadav@jungleeegames.com';
       
@@ -80,7 +91,8 @@ const AdminPayments = () => {
       const { data, error } = await supabase.functions.invoke('admin-add-coins', {
         body: {
           email: actualEmail,
-          coinAmount: coinsAmount
+          coinAmount: coinsAmount,
+          review_id: reviewId // Pass review ID for reference
         }
       });
 
@@ -105,7 +117,7 @@ const AdminPayments = () => {
       console.log('Coins added successfully, new balance:', data.new_balance);
 
       // Update review status to approved
-      await supabase
+      const { error: updateError } = await supabase
         .from('admin_payment_reviews')
         .update({ 
           status: 'approved',
@@ -114,21 +126,50 @@ const AdminPayments = () => {
         })
         .eq('id', reviewId);
 
+      if (updateError) {
+        console.error('Error updating review status:', updateError);
+        // Don't throw here as coins were already added
+      }
+
+      // Update the corresponding payment transaction status
+      const { error: paymentUpdateError } = await supabase
+        .from('payment_transactions')
+        .update({ 
+          status: 'completed',
+          reviewed_by: user?.id,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', reviewData.payment_transaction_id);
+
+      if (paymentUpdateError) {
+        console.error('Error updating payment transaction:', paymentUpdateError);
+      }
+
       toast({
         title: "Payment Approved! ✅",
-        description: `Added ${coinsAmount} coins. New balance: ${data.new_balance}`,
-        duration: 2000,
+        description: `Added ${coinsAmount.toLocaleString()} coins. New balance: ${data.new_balance?.toLocaleString()}`,
+        duration: 3000,
       });
 
-      // Refresh data
+      // Refresh data to show updated status
       fetchPaymentReviews();
+      
+      // Trigger a global refresh event for real-time components
+      window.dispatchEvent(new CustomEvent('paymentApproved', { 
+        detail: { 
+          userId: reviewData.user_id, 
+          coinsAmount, 
+          newBalance: data.new_balance 
+        } 
+      }));
+
     } catch (error) {
       console.error('Error approving payment:', error);
       toast({
         title: "Error",
-        description: "Failed to approve payment",
+        description: error instanceof Error ? error.message : "Failed to approve payment",
         variant: "destructive",
-        duration: 2000,
+        duration: 3000,
       });
     } finally {
       setProcessing(null);
@@ -138,7 +179,19 @@ const AdminPayments = () => {
   const rejectPayment = async (reviewId: string) => {
     setProcessing(reviewId);
     try {
-      await supabase
+      // Get the payment review details first
+      const { data: reviewData, error: reviewError } = await supabase
+        .from('admin_payment_reviews')
+        .select('*')
+        .eq('id', reviewId)
+        .single();
+
+      if (reviewError || !reviewData) {
+        throw new Error('Payment review not found');
+      }
+
+      // Update review status to rejected
+      const { error: updateError } = await supabase
         .from('admin_payment_reviews')
         .update({ 
           status: 'rejected',
@@ -147,21 +200,48 @@ const AdminPayments = () => {
         })
         .eq('id', reviewId);
 
+      if (updateError) {
+        throw updateError;
+      }
+
+      // Update the corresponding payment transaction status
+      const { error: paymentUpdateError } = await supabase
+        .from('payment_transactions')
+        .update({ 
+          status: 'rejected',
+          reviewed_by: user?.id,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq('id', reviewData.payment_transaction_id);
+
+      if (paymentUpdateError) {
+        console.error('Error updating payment transaction:', paymentUpdateError);
+      }
+
       toast({
-        title: "Payment Rejected",
+        title: "Payment Rejected ❌",
         description: "Payment request has been rejected",
-        duration: 2000,
+        duration: 3000,
       });
 
       // Refresh data
       fetchPaymentReviews();
+      
+      // Trigger a global refresh event for real-time components
+      window.dispatchEvent(new CustomEvent('paymentRejected', { 
+        detail: { 
+          userId: reviewData.user_id,
+          reviewId 
+        } 
+      }));
+
     } catch (error) {
       console.error('Error rejecting payment:', error);
       toast({
         title: "Error",
-        description: "Failed to reject payment",
+        description: error instanceof Error ? error.message : "Failed to reject payment",
         variant: "destructive",
-        duration: 2000,
+        duration: 3000,
       });
     } finally {
       setProcessing(null);

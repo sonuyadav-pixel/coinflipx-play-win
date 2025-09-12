@@ -58,16 +58,15 @@ serve(async (req) => {
       });
     }
 
-    // Get pending payment reviews to show as "under review" transactions
-    const { data: pendingPayments, error: pendingError } = await supabase
+    // Get all payment reviews to show status changes
+    const { data: paymentReviews, error: reviewsError } = await supabase
       .from('admin_payment_reviews')
       .select('*')
       .eq('user_id', user.id)
-      .eq('status', 'pending_review')
       .order('created_at', { ascending: false });
 
-    if (pendingError) {
-      console.error('Error fetching pending payments:', pendingError);
+    if (reviewsError) {
+      console.error('Error fetching payment reviews:', reviewsError);
     }
 
     // Format coin transactions for display
@@ -87,26 +86,49 @@ serve(async (req) => {
       };
     }) || [];
 
-    // Format pending payments as transactions  
-    const formattedPendingPayments = pendingPayments?.map(payment => {
+    // Format payment reviews as transactions with proper status
+    const formattedPaymentReviews = paymentReviews?.map(payment => {
+      let type: string;
+      let description: string;
+      let amount = 0;
+
+      switch (payment.status) {
+        case 'pending_review':
+          type = 'purchase_pending';
+          description = `Payment under review - ${payment.coins_amount.toLocaleString()} coins (₹${payment.amount_inr})`;
+          break;
+        case 'approved':
+          type = 'purchase_completed';
+          description = `Payment approved - ${payment.coins_amount.toLocaleString()} coins added`;
+          amount = payment.coins_amount;
+          break;
+        case 'rejected':
+          type = 'purchase_rejected';
+          description = `Payment rejected - ${payment.coins_amount.toLocaleString()} coins (₹${payment.amount_inr})`;
+          break;
+        default:
+          type = 'purchase_pending';
+          description = `Payment ${payment.status} - ${payment.coins_amount.toLocaleString()} coins (₹${payment.amount_inr})`;
+      }
+
       return {
-        id: payment.id,
-        type: 'purchase_pending',
-        amount: 0, // Amount will be added when approved
-        description: `Payment under review - ${payment.coins_amount.toLocaleString()} coins (₹${payment.amount_inr})`,
+        id: `review_${payment.id}`,
+        type,
+        amount,
+        description,
         bet_side: null,
         result: null,
         created_at: payment.created_at,
-        ended_at: payment.created_at,
+        ended_at: payment.reviewed_at || payment.created_at,
         category: 'payment',
-        status: 'pending_review',
+        status: payment.status,
         amount_inr: payment.amount_inr,
         coins_amount: payment.coins_amount
       };
     }) || [];
 
     // Combine and sort all transactions
-    const allTransactions = [...formattedCoinTransactions, ...formattedPendingPayments].sort((a, b) => 
+    const allTransactions = [...formattedCoinTransactions, ...formattedPaymentReviews].sort((a, b) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 

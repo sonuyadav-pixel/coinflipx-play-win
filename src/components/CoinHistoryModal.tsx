@@ -47,7 +47,7 @@ const CoinHistoryModal: React.FC<CoinHistoryModalProps> = ({
     }
   }, [isOpen, user]);
 
-  // Listen for coin updates and refresh transactions
+  // Listen for coin updates and payment status changes
   useEffect(() => {
     const handleCoinsUpdated = () => {
       if (isOpen) {
@@ -56,8 +56,29 @@ const CoinHistoryModal: React.FC<CoinHistoryModalProps> = ({
       }
     };
 
+    const handlePaymentApproved = () => {
+      if (isOpen) {
+        console.log('Payment approved, refreshing transactions...');
+        fetchTransactions();
+      }
+    };
+
+    const handlePaymentRejected = () => {
+      if (isOpen) {
+        console.log('Payment rejected, refreshing transactions...');
+        fetchTransactions();
+      }
+    };
+
     window.addEventListener('coinsUpdated', handleCoinsUpdated);
-    return () => window.removeEventListener('coinsUpdated', handleCoinsUpdated);
+    window.addEventListener('paymentApproved', handlePaymentApproved);
+    window.addEventListener('paymentRejected', handlePaymentRejected);
+    
+    return () => {
+      window.removeEventListener('coinsUpdated', handleCoinsUpdated);
+      window.removeEventListener('paymentApproved', handlePaymentApproved);
+      window.removeEventListener('paymentRejected', handlePaymentRejected);
+    };
   }, [isOpen]);
 
   const fetchTransactions = async () => {
