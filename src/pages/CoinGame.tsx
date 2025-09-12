@@ -419,33 +419,34 @@ const CoinGame = () => {
 
             {/* Timer with circular progress - only show during betting */}
             {timeLeft > 0 && (
-              <div className="relative w-32 h-32 md:w-40 md:h-40 flex items-center justify-center mb-6 md:mb-8 mx-auto">
-                <svg className="absolute top-0 left-0 w-full h-full -rotate-90">
+              <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 flex items-center justify-center mb-4 sm:mb-6 md:mb-8 mx-auto">
+                <svg className="absolute top-0 left-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
                   <circle
-                    cx="80"
-                    cy="80"
-                    r="70"
+                    cx="50"
+                    cy="50"
+                    r="45"
                     stroke="hsl(var(--muted))"
-                    strokeWidth="8"
+                    strokeWidth="6"
                     fill="none"
+                    className="opacity-30"
                   />
                   <motion.circle
-                    cx="80"
-                    cy="80"
-                    r="70"
+                    cx="50"
+                    cy="50"
+                    r="45"
                     stroke={timeLeft <= 10 ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
-                    strokeWidth="8"
+                    strokeWidth="6"
                     fill="none"
-                    strokeDasharray={2 * Math.PI * 70}
-                    strokeDashoffset={(1 - progress / 100) * 2 * Math.PI * 70}
+                    strokeDasharray={2 * Math.PI * 45}
+                    strokeDashoffset={(1 - progress / 100) * 2 * Math.PI * 45}
                     initial={false}
-                    animate={{ strokeDashoffset: (1 - progress / 100) * 2 * Math.PI * 70 }}
+                    animate={{ strokeDashoffset: (1 - progress / 100) * 2 * Math.PI * 45 }}
                     transition={{ duration: 1, ease: "linear" }}
                   />
                 </svg>
                 <div
                   className={`font-mono font-bold transition-all duration-300 ${
-                    timeLeft <= 10 ? "text-destructive text-4xl md:text-6xl animate-pulse glow-red" : "text-primary text-3xl md:text-4xl"
+                    timeLeft <= 10 ? "text-destructive text-lg sm:text-2xl md:text-4xl lg:text-6xl animate-pulse glow-red" : "text-primary text-base sm:text-xl md:text-3xl lg:text-4xl"
                   }`}
                 >
                   {timeLeft}s
