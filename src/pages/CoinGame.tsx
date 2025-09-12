@@ -375,20 +375,21 @@ const CoinGame = () => {
       {/* Content */}
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Header */}
-        <header className="flex justify-between items-center p-4 md:p-6">
+        <header className="flex justify-between items-center p-3 sm:p-4 md:p-6 gap-2">
           <Button 
             variant="glass" 
             onClick={handleBackToGame}
-            className="flex items-center gap-2 text-xs md:text-sm"
+            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm shrink-0"
             size="sm"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span className="hidden xs:inline sm:hidden">Back</span>
             <span className="hidden sm:inline">Back to Lobby</span>
-            <span className="sm:hidden">Back</span>
           </Button>
-          <div className="flex items-center gap-2">
+          
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1 justify-center">
             <CoinFlip size="sm" />
-            <h1 className="text-base md:text-xl font-bold bg-gold-gradient bg-clip-text text-transparent">
+            <h1 className="text-sm sm:text-base md:text-xl font-bold bg-gold-gradient bg-clip-text text-transparent truncate">
               CoinFlipX Live
             </h1>
           </div>
@@ -397,12 +398,12 @@ const CoinGame = () => {
           {user && userCoins && (
             <button
               onClick={() => setShowCoinHistory(true)}
-              className="flex items-center gap-1 md:gap-2 glass-card px-2 md:px-4 py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer min-w-0"
+              className="flex items-center gap-1 sm:gap-2 glass-card px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-white/10 transition-colors cursor-pointer min-w-0 shrink-0"
             >
-              <Coins className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
+              <Coins className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
               <div className="text-right min-w-0">
-                <p className="text-xs md:text-sm text-muted-foreground">Your Coins</p>
-                <p className="text-sm md:text-lg font-bold text-primary truncate">{Math.floor(userCoins.balance).toLocaleString()}</p>
+                <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground hidden xs:block">Your Coins</p>
+                <p className="text-xs sm:text-sm md:text-lg font-bold text-primary truncate">{Math.floor(userCoins.balance).toLocaleString()}</p>
               </div>
             </button>
           )}
