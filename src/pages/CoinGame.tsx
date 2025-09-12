@@ -630,30 +630,30 @@ const CoinGame = () => {
       {/* Result Popup */}
       <AnimatePresence>
         {showPopup && result && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-50">
+          <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-50 p-2 sm:p-4">
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ duration: 0.5, type: "spring" }}
-              className="glass-card p-8 rounded-3xl shadow-2xl text-center max-w-lg mx-4 relative w-full"
+              className="glass-card p-4 sm:p-6 md:p-8 rounded-3xl shadow-2xl text-center max-w-sm sm:max-w-lg mx-auto relative w-full max-h-[90vh] overflow-y-auto"
             >
               {/* Close Button */}
               <button
                 onClick={handleClosePopup}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-muted/20 hover:bg-muted/40 flex items-center justify-center transition-colors"
+                className="absolute top-3 sm:top-4 right-3 sm:right-4 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-muted/20 hover:bg-muted/40 flex items-center justify-center transition-colors text-sm sm:text-base"
               >
                 ✕
               </button>
 
               {/* Result Header */}
-              <h2 className="text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-6">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gold-gradient bg-clip-text text-transparent mb-4 sm:mb-6">
                 Game Result
               </h2>
 
               {/* Coin Animation */}
               <motion.div
-                className="flex justify-center mb-6"
+                className="flex justify-center mb-4 sm:mb-6"
                 initial={{ rotateY: 0 }}
                 animate={{ rotateY: 360 }}
                 transition={{ duration: 1 }}
@@ -662,36 +662,36 @@ const CoinGame = () => {
               </motion.div>
 
               {/* Coin Result */}
-              <p className="text-3xl font-bold text-foreground mb-6">
+              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-4 sm:mb-6">
                 It's {result}!
               </p>
 
               {/* Win/Loss Status */}
               {userBet && userWon !== null && (
-                <div className="mb-8">
+                <div className="mb-6 sm:mb-8">
                   {userWon ? (
                     <div className="text-center">
-                      <div className="text-6xl mb-4">🎉</div>
-                      <h3 className="text-2xl font-bold text-green-400 mb-2">
+                      <div className="text-4xl sm:text-5xl md:text-6xl mb-3 sm:mb-4">🎉</div>
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-green-400 mb-2">
                         Congratulations!
                       </h3>
-                      <p className="text-xl text-green-300 mb-2">
+                      <p className="text-base sm:text-lg md:text-xl text-green-300 mb-2">
                         You won {Math.floor(winAmount)} coins!
                       </p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-xs sm:text-sm text-gray-400">
                         Your bet: {Math.floor(parseFloat(userBet.coin_amount || userBet.bet_amount))} coins on {userBet.bet_side}
                       </p>
                     </div>
                   ) : (
                     <div className="text-center">
-                      <div className="text-6xl mb-4">😢</div>
-                      <h3 className="text-2xl font-bold text-red-400 mb-2">
+                      <div className="text-4xl sm:text-5xl md:text-6xl mb-3 sm:mb-4">😢</div>
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-red-400 mb-2">
                         Better luck next time!
                       </h3>
-                      <p className="text-lg text-gray-300 mb-2">
+                      <p className="text-sm sm:text-base md:text-lg text-gray-300 mb-2">
                         You lost {Math.floor(parseFloat(userBet.coin_amount || userBet.bet_amount))} coins
                       </p>
-                      <p className="text-sm text-gray-400">
+                      <p className="text-xs sm:text-sm text-gray-400">
                         Your bet: {Math.floor(parseFloat(userBet.coin_amount || userBet.bet_amount))} coins on {userBet.bet_side}
                       </p>
                     </div>
@@ -701,21 +701,21 @@ const CoinGame = () => {
 
               {/* No bet placed */}
               {!userBet && (
-                <div className="mb-8 text-center">
-                  <div className="text-4xl mb-4">🎲</div>
-                  <p className="text-xl text-gray-300">
+                <div className="mb-6 sm:mb-8 text-center">
+                  <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🎲</div>
+                  <p className="text-base sm:text-lg md:text-xl text-gray-300">
                     You didn't place a bet this round
                   </p>
                 </div>
               )}
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-4 mb-6">
+              <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <Button
                   onClick={handleClosePopup}
                   variant="hero"
                   size="lg"
-                  className="w-full text-lg font-semibold"
+                  className="w-full text-sm sm:text-base md:text-lg font-semibold py-2 sm:py-3"
                 >
                   Restart Game in {popupTimer}s
                 </Button>
@@ -724,15 +724,15 @@ const CoinGame = () => {
                   onClick={handleBackToLobby}
                   variant="glass"
                   size="lg"
-                  className="w-full text-lg"
+                  className="w-full text-sm sm:text-base md:text-lg py-2 sm:py-3"
                 >
                   Back to Lobby
                 </Button>
               </div>
 
               {/* Timer visualization */}
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <div className="w-8 h-8 rounded-full border-2 border-primary relative">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-muted-foreground">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 border-primary relative flex-shrink-0">
                   <motion.div
                     className="absolute inset-0 rounded-full"
                     style={{
@@ -740,11 +740,11 @@ const CoinGame = () => {
                       borderRadius: '50%'
                     }}
                   />
-                  <span className="absolute inset-0 flex items-center justify-center text-xs font-mono text-white">
+                  <span className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-mono text-white">
                     {popupTimer}
                   </span>
                 </div>
-                <span className="text-sm">Next game starts automatically</span>
+                <span className="text-xs sm:text-sm text-center">Next game starts automatically</span>
               </div>
             </motion.div>
           </div>
