@@ -222,10 +222,15 @@ const OnboardingCarousel = ({ onComplete }: OnboardingCarouselProps) => {
         </p>
       </div>
 
-      {/* Touch/Swipe Handlers */}
+      {/* Touch/Swipe Handlers - Only on slide content area */}
       <div
-        className="absolute inset-0 cursor-pointer"
+        className="absolute inset-0 pointer-events-none"
         onTouchStart={(e) => {
+          // Only handle swipes on the slide content, not buttons
+          if ((e.target as HTMLElement).closest('button')) {
+            return;
+          }
+          
           const touchStart = e.touches[0].clientX;
           const handleTouchEnd = (endEvent: TouchEvent) => {
             const touchEnd = endEvent.changedTouches[0].clientX;
@@ -244,6 +249,7 @@ const OnboardingCarousel = ({ onComplete }: OnboardingCarouselProps) => {
           
           document.addEventListener('touchend', handleTouchEnd);
         }}
+        style={{ pointerEvents: 'auto' }}
       />
     </motion.div>
   );
