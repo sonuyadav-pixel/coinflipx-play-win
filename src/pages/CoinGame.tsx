@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import BettingPopup from "@/components/BettingPopup";
 import CoinHistoryModal from "@/components/CoinHistoryModal";
 import BuyCoinsModal from "@/components/BuyCoinsModal";
+import OnboardingCarousel from "@/components/OnboardingCarousel";
 import Confetti from "react-confetti";
 
 const CoinGame = () => {
@@ -36,6 +37,7 @@ const CoinGame = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Derived state from server-managed game session
   const phase = gameState?.phase || 'betting';
@@ -47,6 +49,11 @@ const CoinGame = () => {
 
   console.log('CoinGame render:', { showCoinHistory, showBuyCoins });
   console.log('Current user coins:', userCoins);
+
+  // Show onboarding for all users
+  useEffect(() => {
+    setShowOnboarding(true);
+  }, []);
 
   // Debug effect to log coin balance changes
   useEffect(() => {
@@ -327,6 +334,10 @@ const CoinGame = () => {
     setShowCoinHistory(false);
     setShowBuyCoins(true);
     console.log('Buy coins modal should open now');
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
   };
 
   return (
@@ -750,6 +761,12 @@ const CoinGame = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Onboarding Carousel */}
+      <OnboardingCarousel
+        isOpen={showOnboarding}
+        onComplete={handleOnboardingComplete}
+      />
     </div>
   );
 };

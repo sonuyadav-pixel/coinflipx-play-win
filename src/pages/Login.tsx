@@ -3,23 +3,13 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import CoinFlip from '@/components/CoinFlip';
 import LoginModal from '@/components/LoginModal';
-import OnboardingCarousel from '@/components/OnboardingCarousel';
 import { useAuth } from '@/hooks/useAuth';
 import heroImage from '@/assets/hero-srk.jpg';
 
 const Login = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-
-  // Check if user should see onboarding
-  useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('coinflip_onboarding_shown');
-    if (!hasSeenOnboarding && !user) {
-      setShowOnboarding(true);
-    }
-  }, [user]);
 
   // Redirect authenticated users to game page
   useEffect(() => {
@@ -30,11 +20,6 @@ const Login = () => {
 
   const handleStartPlaying = () => {
     setIsModalOpen(true);
-  };
-
-  const handleOnboardingComplete = () => {
-    localStorage.setItem('coinflip_onboarding_shown', 'true');
-    setShowOnboarding(false);
   };
 
   return (
@@ -122,12 +107,6 @@ const Login = () => {
       <LoginModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-      />
-
-      {/* Onboarding Carousel */}
-      <OnboardingCarousel
-        isOpen={showOnboarding}
-        onComplete={handleOnboardingComplete}
       />
     </div>
   );
