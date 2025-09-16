@@ -12,7 +12,6 @@ import { toast } from "@/hooks/use-toast";
 import BettingPopup from "@/components/BettingPopup";
 import CoinHistoryModal from "@/components/CoinHistoryModal";
 import BuyCoinsModal from "@/components/BuyCoinsModal";
-import OnboardingCarousel from "@/components/OnboardingCarousel";
 import Confetti from "react-confetti";
 
 const CoinGame = () => {
@@ -37,7 +36,6 @@ const CoinGame = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Derived state from server-managed game session
   const phase = gameState?.phase || 'betting';
@@ -49,22 +47,6 @@ const CoinGame = () => {
 
   console.log('CoinGame render:', { showCoinHistory, showBuyCoins });
   console.log('Current user coins:', userCoins);
-
-  // Check if user should see onboarding
-  useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('coin-game-onboarding-shown');
-    if (!hasSeenOnboarding && user) {
-      // Show onboarding if betting phase is complete (not during betting phase)
-      if (phase !== 'betting' || timeLeft <= 0) {
-        setShowOnboarding(true);
-      }
-    }
-  }, [phase, timeLeft, user]);
-
-  const handleOnboardingComplete = () => {
-    localStorage.setItem('coin-game-onboarding-shown', 'true');
-    setShowOnboarding(false);
-  };
 
   // Debug effect to log coin balance changes
   useEffect(() => {
@@ -623,11 +605,6 @@ const CoinGame = () => {
         isOpen={showBuyCoins}
         onClose={() => setShowBuyCoins(false)}
       />
-
-      {/* Onboarding Carousel */}
-      {showOnboarding && (
-        <OnboardingCarousel onComplete={handleOnboardingComplete} />
-      )}
 
       {/* Confetti */}
       {showConfetti && (
