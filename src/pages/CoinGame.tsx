@@ -12,7 +12,6 @@ import { toast } from "@/hooks/use-toast";
 import BettingPopup from "@/components/BettingPopup";
 import CoinHistoryModal from "@/components/CoinHistoryModal";
 import BuyCoinsModal from "@/components/BuyCoinsModal";
-import OnboardingCarousel from "@/components/OnboardingCarousel";
 import Confetti from "react-confetti";
 
 const CoinGame = () => {
@@ -37,7 +36,6 @@ const CoinGame = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCoinHistory, setShowCoinHistory] = useState(false);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Derived state from server-managed game session
   const phase = gameState?.phase || 'betting';
@@ -47,18 +45,8 @@ const CoinGame = () => {
   const flipping = phase === 'flipping';
   const maxTime = phase === 'betting' ? 30 : phase === 'flipping' ? 5 : phase === 'result' ? 30 : 3;
 
-  console.log('CoinGame render:', { showCoinHistory, showBuyCoins, showOnboarding });
+  console.log('CoinGame render:', { showCoinHistory, showBuyCoins });
   console.log('Current user coins:', userCoins);
-
-  // Check if user needs onboarding
-  useEffect(() => {
-    if (user) {
-      const hasSeenOnboarding = localStorage.getItem('coinflip_onboarding_shown');
-      if (!hasSeenOnboarding && (phase === 'waiting' || phase === 'result')) {
-        setShowOnboarding(true);
-      }
-    }
-  }, [user, phase]);
 
   // Debug effect to log coin balance changes
   useEffect(() => {
@@ -341,10 +329,6 @@ const CoinGame = () => {
     console.log('Buy coins modal should open now');
   };
 
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false);
-  };
-
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background */}
@@ -471,7 +455,7 @@ const CoinGame = () => {
 
             {/* Transition overlay for smooth flipping -> result */}
             <AnimatePresence>
-              {(phase === 'result' || phase === 'waiting') && !showPopup && !showOnboarding && (
+              {(phase === 'result' || phase === 'waiting') && !showPopup && (
                 <motion.div
                   key="transition-overlay"
                   initial={{ opacity: 0 }}
@@ -482,13 +466,8 @@ const CoinGame = () => {
                 >
                   <div className="text-center">
                     <p className="text-base md:text-lg text-muted-foreground">
-                      {phase === 'result' ? 'Preparing results...' : 'Wait for next round to start...'}
+                      {phase === 'result' ? 'Preparing results...' : 'Next round starting...'}
                     </p>
-                    {phase === 'waiting' && (
-                      <p className="text-sm text-muted-foreground mt-2">
-                        New round starting in {timeLeft}s
-                      </p>
-                    )}
                   </div>
                 </motion.div>
               )}
@@ -626,11 +605,6 @@ const CoinGame = () => {
         isOpen={showBuyCoins}
         onClose={() => setShowBuyCoins(false)}
       />
-
-      {/* Onboarding Carousel */}
-      {showOnboarding && (
-        <OnboardingCarousel onComplete={handleOnboardingComplete} />
-      )}
 
       {/* Confetti */}
       {showConfetti && (
