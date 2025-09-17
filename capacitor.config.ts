@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.302a9d1fc176404f9dd14574ccbadefa',
+  appId: 'com.lovable.coinflipx',
   appName: 'coinflipx-play-win',
   webDir: 'dist',
   server: {
