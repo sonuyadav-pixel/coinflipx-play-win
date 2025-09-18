@@ -15,10 +15,36 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@coinflipx" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    
+    <!-- Cache Control -->
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000" />
+    
+    <!-- Preload critical assets for faster loading -->
+    <link rel="preload" href="/src/assets/golden-coin.png" as="image" type="image/png" />
+    <link rel="preload" href="/src/assets/coin-toss-animation.mp4" as="video" type="video/mp4" />
+    <link rel="preload" href="/src/assets/hero-srk.jpg" as="image" type="image/jpeg" />
+    
+    <!-- Prefetch common assets -->
+    <link rel="prefetch" href="/src/assets/golden-coin1.png" />
+    <link rel="prefetch" href="/src/assets/golden-coin3.png" />
+    <link rel="prefetch" href="/src/assets/gold-sparkle.png" />
+    
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//bozlxskkhdpbgwardifc.supabase.co" />
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('SW registered'))
+            .catch(error => console.log('SW registration failed'));
+        });
+      }
+    </script>
   </body>
 </html>

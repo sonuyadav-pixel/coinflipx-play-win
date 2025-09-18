@@ -15,8 +15,12 @@ import BuyCoinsModal from "@/components/BuyCoinsModal";
 import OnboardingCarousel from "@/components/OnboardingCarousel";
 import Confetti from "react-confetti";
 import coinTossVideo from '@/assets/coin-toss-animation.mp4';
+import { useAssetPreloader } from '@/hooks/useAssetCache';
 
 const CoinGame = () => {
+  // Initialize asset preloading
+  useAssetPreloader();
+  
   const navigate = useNavigate();
   const { user } = useAuth();
   const { userCoins, refreshCoins } = useRealtimeCoins();
@@ -449,12 +453,15 @@ const CoinGame = () => {
                 >
                   <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 via-accent/30 to-primary/40 shadow-2xl border border-primary/30">
                     <div className="absolute inset-0 bg-hero-gradient opacity-60"></div>
-                     <video
+                    <video
+                      key="coin-toss-video"
                       autoPlay
                       muted
                       playsInline
                       preload="auto"
                       className="relative z-10 w-full h-full object-cover mix-blend-screen"
+                      onLoadStart={() => console.log('Video loading started')}
+                      onCanPlay={() => console.log('Video can play')}
                     >
                       <source src={coinTossVideo} type="video/mp4" />
                     </video>
