@@ -14,7 +14,7 @@ const CoinFlip = ({ className = '', size = 'md' }: CoinFlipProps) => {
   };
 
   return (
-    <div className={`${sizeClasses[size]} ${className} relative`}>
+    <div className={`${sizeClasses[size]} ${className} relative rounded-full overflow-hidden`}>
       <img
         src={coinImage}
         alt="Golden Coin"
