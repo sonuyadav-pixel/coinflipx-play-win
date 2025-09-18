@@ -18,7 +18,7 @@ const CoinFlip = ({ className = '', size = 'md' }: CoinFlipProps) => {
       <img
         src={coinImage}
         alt="Golden Coin"
-        className="w-full h-full object-contain coin-flip coin-glow rounded-full"
+        className="w-full h-full object-cover coin-flip coin-glow"
       />
       <div className="absolute inset-0 sparkles pointer-events-none"></div>
     </div>
